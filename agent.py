@@ -319,7 +319,11 @@ def _do_recommend_and_compare(items: list, bins: list = None) -> tuple:
                 rec_bin = {**rec_bin,
                            "length": float(new_l), "width": float(new_w), "height": float(new_h)}
                 new_vol  = new_l * new_w * new_h
-                new_util = round(ax * ay * az / new_vol, 2) if new_vol > 0 else 0.0
+                item_vol = sum(
+                    p["dimensions"]["length"] * p["dimensions"]["width"] * p["dimensions"]["height"]
+                    for p in placed_items
+                )
+                new_util = round(item_vol / new_vol, 2) if new_vol > 0 else 0.0
                 new_bin_record = {
                     **rec_result["packed_bins"][0],
                     "dimensions": {"length": float(new_l), "width": float(new_w), "height": float(new_h)},

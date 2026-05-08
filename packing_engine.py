@@ -511,15 +511,11 @@ def _make_bin_record(bin_data: dict, placed: list, weight_map: dict) -> dict:
     bin_volume   = bin_data["length"] * bin_data["width"] * bin_data["height"]
     total_weight = sum(weight_map[p["id"]] for p in placed)
 
-    # 利用率 = 货物实际包围盒 / 箱子体积（衡量箱型与货物的匹配程度）
-    # 比"货物体积之和/箱子体积"更有业务意义：箱子越合身，数字越高
-    if placed:
-        max_x = max(p["position"]["x"] + p["dimensions"]["length"] for p in placed)
-        max_y = max(p["position"]["y"] + p["dimensions"]["width"]  for p in placed)
-        max_z = max(p["position"]["z"] + p["dimensions"]["height"] for p in placed)
-        bbox_volume = max_x * max_y * max_z
-    else:
-        bbox_volume = 0.0
+    # 利用率 = 货物体积之和 / 箱子体积（真实填充率）
+    item_volume = sum(
+        p["dimensions"]["length"] * p["dimensions"]["width"] * p["dimensions"]["height"]
+        for p in placed
+    ) if placed else 0.0
 
     return {
         "bin_type":    bin_data["type"],
@@ -528,7 +524,7 @@ def _make_bin_record(bin_data: dict, placed: list, weight_map: dict) -> dict:
             "width":  float(bin_data["width"]),
             "height": float(bin_data["height"]),
         },
-        "utilization":  round(bbox_volume / bin_volume, 2) if bin_volume > 0 else 0.0,
+        "utilization":  round(item_volume / bin_volume, 2) if bin_volume > 0 else 0.0,
         "total_weight": round(total_weight, 2),
         "item_count":   len(placed),
         "items":        placed,
