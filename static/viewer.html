@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>三维装箱可视化</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── 左侧3D画布 ── */
+    #canvas-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    #loading {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      color: #8b949e;
+      font-size: 14px;
+      text-align: center;
+    }
+    #loading .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid #21262d;
+      border-top-color: #58a6ff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── 右侧信息面板 ── */
+    #panel {
+      width: 300px;
+      background: #161b22;
+      border-left: 1px solid #21262d;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #panel-header {
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid #21262d;
+    }
+    #panel-header h1 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #58a6ff;
+      margin-bottom: 10px;
+    }
+
+    /* 箱子选项卡 */
+    #bin-tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 4px 12px;
+      border: 1px solid #30363d;
+      background: transparent;
+      color: #8b949e;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.15s;
+    }
+    .tab-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+    .tab-btn.active { background: #1f6feb; border-color: #1f6feb; color: white; }
+
+    /* 统计摘要 */
+    #summary {
+      padding: 14px 20px;
+      border-bottom: 1px solid #21262d;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      margin: 4px 0;
+      color: #8b949e;
+    }
+    .stat-row strong { color: #e6edf3; }
+
+    /* 利用率进度条 */
+    .progress-bar {
+      height: 4px;
+      background: #21262d;
+      border-radius: 2px;
+      margin: 8px 0 4px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #1f6feb, #58a6ff);
+      border-radius: 2px;
+      transition: width 0.4s ease;
+    }
+
+    /* 货物列表 */
+    #item-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 20px;
+    }
+    #item-list::-webkit-scrollbar { width: 4px; }
+    #item-list::-webkit-scrollbar-track { background: transparent; }
+    #item-list::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+
+    .item-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px;
+      border: 1px solid #21262d;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .item-card:hover {
+      border-color: var(--item-color);
+      background: #21262d;
+    }
+    .item-card.highlighted {
+      border-color: var(--item-color);
+      background: #21262d;
+    }
+    .color-swatch {
+      width: 14px; height: 14px;
+      border-radius: 3px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .item-name { font-size: 12px; font-weight: 500; margin-bottom: 3px; }
+    .item-meta { font-size: 11px; color: #8b949e; line-height: 1.5; }
+
+    /* 底部说明 */
+    #tips {
+      padding: 10px 20px;
+      border-top: 1px solid #21262d;
+      font-size: 11px;
+      color: #484f58;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="canvas-wrap">
+    <div id="loading">
+      <div class="spinner"></div>
+      加载中...
+    </div>
+  </div>
+
+  <div id="panel">
+    <div id="panel-header">
+      <h1>三维装箱可视化</h1>
+      <div id="bin-tabs"></div>
+    </div>
+    <div id="summary"></div>
+    <div id="item-list"></div>
+    <div id="tips">
+      鼠标左键：旋转 &nbsp;|&nbsp; 右键：平移 &nbsp;|&nbsp; 滚轮：缩放<br>
+      悬停货物卡片可高亮对应箱体
+    </div>
+  </div>
+
+  <!-- Three.js ES Module -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // ── 颜色配置 ─────────────────────────────────────────────────────────────
+    const PALETTE = [
+      0xFF6B6B, 0x4ECDC4, 0x45B7D1, 0x96CEB4, 0xFECA57,
+      0xFF9FF3, 0x54A0FF, 0xA29BFE, 0x00D2D3, 0xFF9F43,
+      0x6C5CE7, 0xFD79A8, 0x55EFC4, 0xFDCB6E, 0xE17055,
+    ];
+
+    // ── Three.js 核心变量 ─────────────────────────────────────────────────────
+    let scene, camera, renderer, controls;
+    let packingData = null;
+    let itemMeshes = [];       // [{mesh, edgeMesh, mat}]
+
+    // ── 初始化 Three.js ───────────────────────────────────────────────────────
+    function initThree() {
+      const wrap = document.getElementById('canvas-wrap');
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0d1117);
+
+      camera = new THREE.PerspectiveCamera(45, wrap.clientWidth / wrap.clientHeight, 1, 5000);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+      renderer.shadowMap.enabled = true;
+      wrap.appendChild(renderer.domElement);
+
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.06;
+
+      // 灯光
+      scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+      const dir = new THREE.DirectionalLight(0xffffff, 0.9);
+      dir.position.set(300, 500, 300);
+      scene.add(dir);
+      const dir2 = new THREE.DirectionalLight(0x8899ff, 0.3);
+      dir2.position.set(-300, 200, -300);
+      scene.add(dir2);
+
+      function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+      }
+      animate();
+
+      window.addEventListener('resize', () => {
+        camera.aspect = wrap.clientWidth / wrap.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+      });
+    }
+
+    // ── 清空场景（保留灯光）───────────────────────────────────────────────────
+    function clearScene() {
+      const keep = obj =>
+        obj instanceof THREE.AmbientLight || obj instanceof THREE.DirectionalLight;
+      scene.children = scene.children.filter(keep);
+      itemMeshes = [];
+    }
+
+    // ── 绘制指定箱子 ──────────────────────────────────────────────────────────
+    function renderBin(binIndex) {
+      clearScene();
+      const bin = packingData.packed_bins[binIndex];
+      const { length: L, width: W, height: H } = bin.dimensions;
+
+      // 地面参考平面
+      const floorGeo = new THREE.PlaneGeometry(L * 3, W * 3);
+      const floorMat = new THREE.MeshBasicMaterial({ color: 0x161b22, side: THREE.DoubleSide });
+      const floor = new THREE.Mesh(floorGeo, floorMat);
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.set(L / 2, -0.5, W / 2);
+      scene.add(floor);
+
+      // 网格线
+      const grid = new THREE.GridHelper(Math.max(L, W) * 2.5, 20, 0x21262d, 0x21262d);
+      grid.position.set(L / 2, -0.5, W / 2);
+      scene.add(grid);
+
+      // 箱体外框（线框）
+      const binGeo = new THREE.BoxGeometry(L, H, W);
+      const binEdge = new THREE.EdgesGeometry(binGeo);
+      const binLine = new THREE.LineSegments(
+        binEdge,
+        new THREE.LineBasicMaterial({ color: 0x58a6ff, opacity: 0.5, transparent: true }),
+      );
+      binLine.position.set(L / 2, H / 2, W / 2);
+      scene.add(binLine);
+
+      // 箱体底面半透明
+      const bottomGeo = new THREE.PlaneGeometry(L, W);
+      const bottomMat = new THREE.MeshBasicMaterial({
+        color: 0x1f6feb, opacity: 0.08, transparent: true, side: THREE.DoubleSide,
+      });
+      const bottom = new THREE.Mesh(bottomGeo, bottomMat);
+      bottom.rotation.x = -Math.PI / 2;
+      bottom.position.set(L / 2, 0, W / 2);
+      scene.add(bottom);
+
+      // 货物
+      bin.items.forEach((item, i) => {
+        const color = PALETTE[i % PALETTE.length];
+        const p = item.position;
+        const d = item.dimensions;
+
+        // Three.js: x=长, y=高(上), z=宽
+        const geo = new THREE.BoxGeometry(d.length, d.height, d.width);
+
+        const mat = new THREE.MeshPhongMaterial({
+          color, opacity: 0.78, transparent: true, shininess: 60,
+        });
+        const mesh = new THREE.Mesh(geo, mat);
+        mesh.position.set(p.x + d.length / 2, p.z + d.height / 2, p.y + d.width / 2);
+        mesh.castShadow = true;
+        scene.add(mesh);
+
+        // 边框线
+        const edgeGeo = new THREE.EdgesGeometry(geo);
+        const edgeMat = new THREE.LineBasicMaterial({
+          color: 0xffffff, opacity: 0.25, transparent: true,
+        });
+        const edgeMesh = new THREE.LineSegments(edgeGeo, edgeMat);
+        edgeMesh.position.copy(mesh.position);
+        scene.add(edgeMesh);
+
+        itemMeshes.push({ mesh, edgeMesh, mat, edgeMat, color });
+      });
+
+      // 调整相机视角以适应箱体
+      const maxDim = Math.max(L, W, H);
+      const dist = maxDim * 2.0;
+      camera.position.set(L / 2 + dist * 0.8, H / 2 + dist * 0.7, W / 2 + dist * 0.8);
+      controls.target.set(L / 2, H / 2, W / 2);
+      controls.update();
+    }
+
+    // ── 更新信息面板 ──────────────────────────────────────────────────────────
+    function updatePanel(binIndex) {
+      const bin = packingData.packed_bins[binIndex];
+      const d = bin.dimensions;
+      const pct = (bin.utilization * 100).toFixed(1);
+
+      document.getElementById('summary').innerHTML = `
+        <div class="stat-row"><span>箱型</span><strong>${bin.bin_type}</strong></div>
+        <div class="stat-row"><span>尺寸</span><strong>${d.length}×${d.width}×${d.height} cm</strong></div>
+        <div class="stat-row"><span>总重量</span><strong>${bin.total_weight} kg</strong></div>
+        <div class="stat-row"><span>货物数量</span><strong>${bin.item_count} 件</strong></div>
+        <div class="stat-row"><span>空间利用率</span><strong>${pct}%</strong></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      `;
+
+      const listEl = document.getElementById('item-list');
+      listEl.innerHTML = '';
+
+      bin.items.forEach((item, i) => {
+        const color = PALETTE[i % PALETTE.length];
+        const hex = '#' + color.toString(16).padStart(6, '0');
+        const p = item.position;
+        const d2 = item.dimensions;
+
+        const card = document.createElement('div');
+        card.className = 'item-card';
+        card.style.setProperty('--item-color', hex);
+        card.innerHTML = `
+          <div class="color-swatch" style="background:${hex}"></div>
+          <div>
+            <div class="item-name">${item.id}</div>
+            <div class="item-meta">
+              位置：(${p.x.toFixed(0)}, ${p.y.toFixed(0)}, ${p.z.toFixed(0)})<br>
+              尺寸：${d2.length.toFixed(0)} × ${d2.width.toFixed(0)} × ${d2.height.toFixed(0)} cm
+            </div>
+          </div>
+        `;
+
+        // 悬停高亮
+        card.addEventListener('mouseenter', () => {
+          if (itemMeshes[i]) {
+            itemMeshes[i].mat.opacity = 1.0;
+            itemMeshes[i].edgeMat.opacity = 0.8;
+          }
+          card.classList.add('highlighted');
+        });
+        card.addEventListener('mouseleave', () => {
+          if (itemMeshes[i]) {
+            itemMeshes[i].mat.opacity = 0.78;
+            itemMeshes[i].edgeMat.opacity = 0.25;
+          }
+          card.classList.remove('highlighted');
+        });
+
+        listEl.appendChild(card);
+      });
+    }
+
+    // ── 渲染箱子选项卡 ────────────────────────────────────────────────────────
+    function renderTabs() {
+      const tabs = document.getElementById('bin-tabs');
+      tabs.innerHTML = '';
+      packingData.packed_bins.forEach((bin, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'tab-btn' + (i === 0 ? ' active' : '');
+        btn.textContent = `箱子 ${i + 1}`;
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          renderBin(i);
+          updatePanel(i);
+        });
+        tabs.appendChild(btn);
+      });
+    }
+
+    // ── 加载数据 ──────────────────────────────────────────────────────────────
+    async function main() {
+      const resultId = new URLSearchParams(window.location.search).get('id');
+      const loadingEl = document.getElementById('loading');
+
+      if (!resultId) {
+        loadingEl.textContent = '缺少 id 参数，请通过 API 返回的 view_url 访问';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/results/${resultId}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        packingData = await res.json();
+      } catch (e) {
+        loadingEl.textContent = `加载失败：${e.message}`;
+        return;
+      }
+
+      if (!packingData.packed_bins?.length) {
+        loadingEl.textContent = '没有装箱数据可显示';
+        return;
+      }
+
+      loadingEl.style.display = 'none';
+      initThree();
+      renderTabs();
+      renderBin(0);
+      updatePanel(0);
+    }
+
+    main();
+  </script>
+</body>
+</html>

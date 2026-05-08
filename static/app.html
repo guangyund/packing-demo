@@ -1,0 +1,3502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>智能包装系统</title>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── 顶栏 ── */
+    header {
+      height: 48px;
+      background: #161b22;
+      border-bottom: 1px solid #21262d;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+    header h1 { font-size: 15px; font-weight: 600; color: #58a6ff; }
+    header span { font-size: 12px; color: #484f58; }
+
+    /* ── 主体布局 ── */
+    main {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── 左侧输入面板 ── */
+    #input-panel {
+      width: 340px;
+      background: #161b22;
+      border-right: 1px solid #21262d;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    #input-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+    #input-scroll::-webkit-scrollbar { width: 4px; }
+    #input-scroll::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      margin-top: 16px;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    /* 货物行 */
+    .item-row {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
+    }
+    .item-row-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .color-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .item-name-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #e6edf3;
+      font-size: 13px;
+      font-weight: 500;
+      outline: none;
+    }
+    .item-name-input::placeholder { color: #484f58; }
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #484f58;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.15s;
+    }
+    .delete-btn:hover { color: #f85149; }
+
+    .item-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+      gap: 6px;
+    }
+    .field-group { display: flex; flex-direction: column; gap: 3px; }
+    .field-label { font-size: 10px; color: #484f58; }
+    .field-input {
+      background: #21262d;
+      border: 1px solid #30363d;
+      border-radius: 4px;
+      color: #e6edf3;
+      font-size: 12px;
+      padding: 4px 6px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .field-input:focus { border-color: #58a6ff; }
+    .field-input::placeholder { color: #484f58; }
+
+    /* 箱型设置 */
+    .bin-section {
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .bin-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    /* 箱型模式切换 */
+    .bin-mode-toggle {
+      display: flex;
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .bin-mode-btn {
+      flex: 1;
+      padding: 6px 0;
+      text-align: center;
+      font-size: 12px;
+      color: #8b949e;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      transition: all 0.15s;
+    }
+    .bin-mode-btn.active { background: #1f6feb; color: #fff; }
+
+    /* 包材库搜索 */
+    .catalog-search-bar { display: flex; gap: 6px; margin-bottom: 6px; }
+    .catalog-search-input {
+      flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
+      color: #c9d1d9; padding: 6px 10px; font-size: 12px; width: 100%; box-sizing: border-box;
+    }
+    .catalog-search-input:focus { outline: none; border-color: #58a6ff; }
+    .catalog-type-select {
+      background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
+      color: #c9d1d9; padding: 5px 6px; font-size: 12px; flex-shrink: 0;
+    }
+    .catalog-search-results {
+      background: #161b22; border: 1px solid #30363d; border-radius: 6px;
+      max-height: 180px; overflow-y: auto; margin-bottom: 8px;
+    }
+    .catalog-result-item {
+      padding: 6px 10px; cursor: pointer; border-bottom: 1px solid #21262d;
+      display: flex; justify-content: space-between; align-items: center; font-size: 12px;
+    }
+    .catalog-result-item:last-child { border-bottom: none; }
+    .catalog-result-item:hover { background: #21262d; }
+    .catalog-result-name { color: #c9d1d9; font-weight: 500; }
+    .catalog-result-meta { color: #8b949e; font-size: 11px; margin-top: 1px; }
+    .catalog-result-sku { color: #6e7681; font-size: 10px; flex-shrink: 0; margin-left: 8px; }
+    .catalog-chips { display: flex; flex-wrap: wrap; gap: 5px; min-height: 24px; }
+    .catalog-chip {
+      display: flex; align-items: center; gap: 4px;
+      background: #1f3a5a; border: 1px solid #388bfd; border-radius: 10px;
+      padding: 2px 6px 2px 8px; font-size: 11px; color: #79c0ff;
+    }
+    .catalog-chip-remove { cursor: pointer; color: #6e7681; font-size: 13px; line-height: 1; margin-left: 2px; }
+    .catalog-chip-remove:hover { color: #f85149; }
+    .catalog-hint { font-size: 11px; color: #6e7681; padding: 4px 0; }
+
+    /* 自定义箱型行 */
+    .custom-bin-row {
+      background: #161b22;
+      border: 1px solid #21262d;
+      border-radius: 6px;
+      padding: 8px;
+      margin-bottom: 6px;
+    }
+    .custom-bin-row-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .custom-bin-name-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #e6edf3;
+      font-size: 12px;
+      font-weight: 500;
+      outline: none;
+    }
+    .custom-bin-name-input::placeholder { color: #484f58; }
+
+    /* 按钮 */
+    .add-btn {
+      width: 100%;
+      padding: 8px;
+      background: transparent;
+      border: 1px dashed #30363d;
+      border-radius: 6px;
+      color: #8b949e;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-top: 4px;
+    }
+    .add-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+
+    /* 批量导入 / 下载模板 */
+    .import-row {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-top: 4px;
+      flex-wrap: wrap;
+    }
+    .import-row .add-btn {
+      flex: 1;
+      min-width: 80px;
+      margin-top: 0;
+    }
+    .import-btn {
+      flex: 1;
+      min-width: 80px;
+      padding: 8px;
+      background: transparent;
+      border: 1px dashed #30363d;
+      border-radius: 6px;
+      color: #8b949e;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+    .import-btn:hover { border-color: #3fb950; color: #3fb950; }
+    .tpl-link {
+      font-size: 11px;
+      color: #58a6ff;
+      cursor: pointer;
+      text-decoration: underline;
+      white-space: nowrap;
+      background: none;
+      border: none;
+      padding: 0;
+    }
+    .tpl-link:hover { color: #79c0ff; }
+
+    /* 底部操作栏 */
+    #input-footer {
+      padding: 12px 16px;
+      border-top: 1px solid #21262d;
+      display: flex;
+      gap: 8px;
+    }
+    .demo-btn {
+      padding: 8px 12px;
+      background: transparent;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #8b949e;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .demo-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+    .calc-btn {
+      flex: 1;
+      padding: 8px 16px;
+      background: #1f6feb;
+      border: none;
+      border-radius: 6px;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .calc-btn:hover { background: #388bfd; }
+    .calc-btn:disabled { background: #21262d; color: #484f58; cursor: not-allowed; }
+
+    /* ── 右侧可视化区域 ── */
+    #viz-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #canvas-wrap {
+      flex: 1;
+      position: relative;
+      background: #0d1117;
+    }
+
+    /* 空状态提示 */
+    #empty-state {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #484f58;
+    }
+    #empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+    #empty-state p { font-size: 14px; }
+
+    /* 加载遮罩 */
+    #loading-mask {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(13,17,23,0.85);
+      z-index: 10;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+    }
+    #loading-mask.show { display: flex; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid #21262d;
+      border-top-color: #58a6ff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* 错误提示 */
+    #error-bar {
+      display: none;
+      position: absolute;
+      top: 12px; left: 50%;
+      transform: translateX(-50%);
+      background: #3d1f1f;
+      border: 1px solid #f85149;
+      color: #f85149;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      z-index: 20;
+    }
+    #error-bar.show { display: block; }
+
+    /* 箱子切换 Tab */
+    #bin-tabs-bar {
+      display: none;
+      position: absolute;
+      top: 12px; left: 12px;
+      gap: 6px;
+      z-index: 5;
+    }
+    #bin-tabs-bar.show { display: flex; }
+    .vtab {
+      padding: 4px 12px;
+      border: 1px solid #30363d;
+      background: rgba(13,17,23,0.85);
+      color: #8b949e;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.15s;
+    }
+    .vtab.active { background: #1f6feb; border-color: #1f6feb; color: white; }
+
+    /* ── 动画控制栏 ── */
+    #anim-bar {
+      height: 64px;
+      background: #161b22;
+      border-top: 1px solid #21262d;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .anim-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: 1px solid #30363d;
+      background: transparent;
+      color: #e6edf3;
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .anim-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+    .anim-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    #progress-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    #progress-label {
+      font-size: 11px;
+      color: #8b949e;
+    }
+    #progress-track {
+      height: 4px;
+      background: #21262d;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    #progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #1f6feb, #58a6ff);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.1s;
+    }
+
+    .speed-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #8b949e;
+    }
+    #speed-slider {
+      width: 80px;
+      accent-color: #58a6ff;
+    }
+
+    /* AI 模式开关 */
+    .ai-toggle-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+    .ai-toggle-label { font-size: 13px; font-weight: 500; }
+    .ai-toggle-sub   { font-size: 11px; color: #484f58; margin-top: 2px; }
+    .toggle-switch {
+      position: relative; width: 40px; height: 22px; flex-shrink: 0;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute; inset: 0;
+      background: #30363d; border-radius: 22px; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .toggle-slider::before {
+      content: ''; position: absolute;
+      width: 16px; height: 16px; border-radius: 50%;
+      background: white; left: 3px; top: 3px;
+      transition: transform 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: #1f6feb; }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+    /* AI 分析说明框 */
+    #ai-summary {
+      display: none;
+      position: absolute;
+      bottom: 72px; left: 12px;
+      max-width: 320px;
+      background: rgba(22,27,34,0.95);
+      border: 1px solid #1f6feb;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: #8b949e;
+      z-index: 5;
+      white-space: pre-wrap;
+    }
+    #ai-summary.show { display: block; }
+    #ai-summary strong { color: #58a6ff; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    #ai-summary.local { border-color: #f0883e; }
+    #ai-summary.local strong { color: #f0883e; }
+    #ai-summary-badge {
+      font-size: 10px; font-weight: normal;
+      padding: 1px 6px; border-radius: 10px;
+      line-height: 1.6;
+    }
+    #ai-summary.show.ai   #ai-summary-badge { background: rgba(31,111,235,0.2); color: #58a6ff; }
+    #ai-summary.show.local #ai-summary-badge { background: rgba(240,136,62,0.2); color: #f0883e; }
+
+    /* 新包材对比面板 */
+    #compare-panel {
+      display: none;
+      position: absolute;
+      top: 12px; right: 12px;
+      width: 260px;
+      background: rgba(22,27,34,0.96);
+      border: 1px solid #f0883e;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 12px;
+      z-index: 6;
+    }
+    #compare-panel.show { display: block; }
+    .compare-title {
+      font-size: 13px; font-weight: 600;
+      color: #f0883e; margin-bottom: 10px;
+    }
+    .compare-row {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 8px;
+    }
+    .compare-col {
+      flex: 1; text-align: center;
+      background: #0d1117; border-radius: 6px;
+      padding: 8px 4px;
+    }
+    .compare-col + .compare-col { margin-left: 8px; }
+    .compare-col-title { font-size: 10px; color: #8b949e; margin-bottom: 4px; }
+    .compare-col-val   { font-size: 13px; font-weight: 600; color: #e6edf3; }
+    .compare-col-sub   { font-size: 10px; color: #8b949e; margin-top: 2px; }
+    .winner-badge {
+      display: inline-block; margin-top: 8px;
+      padding: 3px 10px; border-radius: 12px;
+      background: #1f6feb; color: white;
+      font-size: 11px; font-weight: 600;
+    }
+    .fee-block { margin-top: 6px; line-height: 1.6; }
+    .fee-tier-badge {
+      display: inline-block;
+      padding: 1px 7px; border-radius: 10px;
+      background: rgba(240,136,62,0.15); color: #f0883e;
+      font-size: 10px; font-weight: 600;
+      border: 1px solid rgba(240,136,62,0.3);
+    }
+    .compare-divider {
+      font-size: 16px; color: #484f58; flex-shrink: 0; padding: 0 4px;
+    }
+    .compare-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .compare-view-btn {
+      flex: 1;
+      padding: 6px 4px;
+      border-radius: 6px;
+      border: 1px solid #30363d;
+      background: transparent;
+      color: #8b949e;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+    }
+    .compare-view-btn:hover  { border-color: #58a6ff; color: #58a6ff; }
+    .compare-view-btn.active { background: #1f6feb; border-color: #1f6feb; color: white; }
+
+    /* 统计栏 */
+    #stats-bar {
+      display: none;
+      position: absolute;
+      bottom: 72px;
+      right: 12px;
+      background: rgba(22,27,34,0.92);
+      border: 1px solid #21262d;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      z-index: 5;
+      min-width: 180px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    #stats-bar.show { display: block; }
+    .stat-line { display: flex; justify-content: space-between; gap: 16px; margin: 3px 0; color: #8b949e; }
+    .stat-line strong { color: #e6edf3; }
+    .stat-detail {
+      margin-top: 8px;
+      border-top: 1px solid #21262d;
+      padding-top: 6px;
+    }
+    .stat-detail-title { font-size: 10px; color: #484f58; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-detail-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 3px 0;
+      color: #8b949e;
+      font-size: 11px;
+    }
+    .stat-detail-row strong { color: #e6edf3; }
+
+    /* 悬停提示框 */
+    #item-tooltip {
+      display: none;
+      position: fixed;
+      background: rgba(22,27,34,0.97);
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 12px;
+      color: #e6edf3;
+      z-index: 200;
+      pointer-events: none;
+      line-height: 1.8;
+      min-width: 160px;
+    }
+    #item-tooltip .tip-name { font-weight: 600; color: #58a6ff; margin-bottom: 3px; }
+    #item-tooltip .tip-row  { color: #8b949e; }
+    #item-tooltip .tip-row strong { color: #e6edf3; }
+
+    /* 拍照识别按钮 */
+    .camera-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 13px; padding: 2px 4px; border-radius: 4px;
+      opacity: 0.45; transition: opacity 0.15s; line-height: 1;
+    }
+    .camera-btn:hover { opacity: 1; }
+
+    /* 形状识别 Modal */
+    /* 包材库 Modal */
+    #catalog-modal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.72); z-index: 500;
+      align-items: center; justify-content: center;
+    }
+    #catalog-modal.show { display: flex; }
+    #catalog-box {
+      background: #161b22; border: 1px solid #30363d;
+      border-radius: 12px; width: 680px; max-width: 96vw;
+      max-height: 88vh; display: flex; flex-direction: column; padding: 20px;
+    }
+    #catalog-header {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 12px;
+    }
+    #catalog-header span { font-size: 15px; font-weight: 600; color: #e6edf3; }
+    #catalog-close {
+      background: none; border: none; color: #8b949e;
+      font-size: 20px; cursor: pointer; padding: 2px 6px;
+      border-radius: 4px; line-height: 1;
+    }
+    #catalog-close:hover { color: #f85149; }
+    #catalog-filter-row {
+      display: flex; gap: 8px; margin-bottom: 10px;
+    }
+    #catalog-search {
+      flex: 1; background: #0d1117; border: 1px solid #30363d;
+      border-radius: 6px; color: #e6edf3; font-size: 13px;
+      padding: 6px 10px; outline: none;
+    }
+    #catalog-search:focus { border-color: #58a6ff; }
+    #catalog-type-select {
+      background: #0d1117; border: 1px solid #30363d;
+      border-radius: 6px; color: #8b949e; font-size: 12px;
+      padding: 6px 8px; cursor: pointer; outline: none;
+    }
+    #catalog-list {
+      flex: 1; overflow-y: auto; border: 1px solid #21262d;
+      border-radius: 6px;
+    }
+    #catalog-list::-webkit-scrollbar { width: 4px; }
+    #catalog-list::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+    .catalog-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 12px; border-bottom: 1px solid #21262d;
+      cursor: pointer; transition: background 0.12s;
+    }
+    .catalog-item:last-child { border-bottom: none; }
+    .catalog-item:hover { background: #1c2128; }
+    .catalog-item-type {
+      font-size: 9px; padding: 1px 5px; border-radius: 8px;
+      flex-shrink: 0; font-weight: 600;
+    }
+    .catalog-item-type.hard { background: rgba(31,111,235,0.15); color: #58a6ff; border: 1px solid rgba(31,111,235,0.3); }
+    .catalog-item-type.soft { background: rgba(63,185,80,0.12); color: #3fb950; border: 1px solid rgba(63,185,80,0.3); }
+    .catalog-item-info { flex: 1; min-width: 0; }
+    .catalog-item-name { font-size: 12px; color: #e6edf3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .catalog-item-dims { font-size: 10px; color: #8b949e; margin-top: 2px; }
+    .catalog-item-price { font-size: 12px; color: #f0883e; flex-shrink: 0; }
+    #catalog-footer {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-top: 10px; font-size: 11px; color: #484f58;
+    }
+    #catalog-pagination { display: flex; gap: 6px; }
+    .catalog-page-btn {
+      background: #21262d; border: 1px solid #30363d;
+      border-radius: 4px; color: #8b949e; font-size: 11px;
+      padding: 3px 8px; cursor: pointer;
+    }
+    .catalog-page-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+    .catalog-page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    #shape-modal {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.72); z-index: 500;
+      align-items: center; justify-content: center;
+    }
+    #shape-modal.show { display: flex; }
+    #shape-modal-box {
+      background: #161b22; border: 1px solid #30363d;
+      border-radius: 12px; width: 660px; max-width: 95vw;
+      max-height: 92vh; overflow-y: auto; padding: 20px;
+    }
+    #shape-modal-header {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 14px;
+    }
+    #shape-modal-header span { font-size: 15px; font-weight: 600; color: #e6edf3; }
+    #shape-modal-close {
+      background: none; border: none; color: #8b949e;
+      font-size: 20px; cursor: pointer; padding: 2px 6px;
+      border-radius: 4px; transition: color 0.15s; line-height: 1;
+    }
+    #shape-modal-close:hover { color: #f85149; }
+
+    #shape-preview-row {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px; margin-bottom: 14px;
+    }
+    #shape-photo-preview {
+      border-radius: 8px; background: #0d1117;
+      aspect-ratio: 1; display: flex;
+      align-items: center; justify-content: center; overflow: hidden;
+    }
+    #shape-photo-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
+    #shape-canvas-wrap {
+      border-radius: 8px; background: #0d1117;
+      aspect-ratio: 1; position: relative; overflow: hidden;
+    }
+    #shape-preview-canvas { width: 100%; height: 100%; display: block; }
+    #shape-preview-loading {
+      display: none; position: absolute; inset: 0;
+      background: rgba(13,17,23,0.88);
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 10px; font-size: 13px; color: #8b949e;
+    }
+    #shape-preview-loading.show { display: flex; }
+
+    #shape-type-row {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+    }
+    .shape-type-badge {
+      background: #1f6feb; color: white; font-size: 11px;
+      font-weight: 600; padding: 3px 10px; border-radius: 12px;
+    }
+    #shape-note-text { font-size: 12px; color: #8b949e; }
+    #shape-confidence-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 14px; font-size: 12px; color: #8b949e;
+    }
+    #shape-confidence-track {
+      flex: 1; height: 4px; background: #21262d;
+      border-radius: 2px; overflow: hidden;
+    }
+    #shape-confidence-fill {
+      height: 100%; background: linear-gradient(90deg,#1f6feb,#58a6ff);
+      border-radius: 2px; width: 0%; transition: width 0.4s ease;
+    }
+    #shape-confidence-text { color: #e6edf3; font-weight: 600; min-width: 36px; text-align: right; }
+    #shape-dims-row {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px; margin-bottom: 8px;
+    }
+    .shape-dim-group { display: flex; flex-direction: column; gap: 4px; }
+    .shape-dim-label { font-size: 11px; color: #8b949e; }
+    .shape-dim-input {
+      background: #21262d; border: 1px solid #30363d;
+      border-radius: 6px; color: #e6edf3; font-size: 13px;
+      padding: 7px 10px; outline: none; transition: border-color 0.15s;
+    }
+    .shape-dim-input:focus { border-color: #58a6ff; }
+    #shape-dim-hint {
+      font-size: 11px; color: #484f58; margin-bottom: 14px;
+    }
+    #shape-modal-footer { display: flex; justify-content: flex-end; gap: 8px; }
+    .shape-retake-btn {
+      padding: 8px 16px; background: transparent;
+      border: 1px solid #30363d; border-radius: 6px;
+      color: #8b949e; font-size: 13px; cursor: pointer; transition: all 0.15s;
+    }
+    .shape-retake-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+    .shape-confirm-btn {
+      padding: 8px 20px; background: #1f6feb; border: none;
+      border-radius: 6px; color: white; font-size: 13px;
+      font-weight: 600; cursor: pointer; transition: background 0.15s;
+    }
+    .shape-confirm-btn:hover { background: #388bfd; }
+
+    /* 拍摄阶段 */
+    #shape-capture-hint {
+      font-size: 12px; color: #8b949e; margin-bottom: 14px; text-align: center;
+    }
+    #shape-capture-slots {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 14px;
+    }
+    .capture-slot {
+      background: #0d1117; border: 2px dashed #30363d; border-radius: 10px;
+      aspect-ratio: 1; cursor: pointer;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4px;
+      transition: border-color 0.15s; position: relative; overflow: hidden;
+    }
+    .capture-slot:hover { border-color: #58a6ff; }
+    .capture-slot.captured { border: 2px solid #3fb950; }
+    .slot-label {
+      position: absolute; top: 8px; left: 0; right: 0;
+      text-align: center; font-size: 11px; font-weight: 600;
+      color: #8b949e; letter-spacing: 0.5px;
+    }
+    .slot-icon { font-size: 26px; margin-top: 8px; }
+    .slot-hint { font-size: 11px; color: #484f58; }
+    .slot-thumb {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; border-radius: 8px; opacity: 0.9;
+    }
+    .slot-check {
+      position: absolute; bottom: 6px; right: 6px;
+      background: #3fb950; color: white; border-radius: 50%;
+      width: 18px; height: 18px; font-size: 11px;
+      display: flex; align-items: center; justify-content: center; font-weight: 600;
+    }
+    #shape-capture-footer { display: flex; justify-content: flex-end; gap: 8px; }
+
+    /* 结果阶段缩略图行 */
+    #shape-thumb-row { display: flex; gap: 10px; margin-bottom: 12px; }
+    .thumb-item {
+      flex: 1; position: relative; border-radius: 6px; overflow: hidden;
+      background: #0d1117; aspect-ratio: 1.3;
+    }
+    .thumb-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .thumb-item-label {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: rgba(0,0,0,0.62); color: #e6edf3;
+      font-size: 10px; text-align: center; padding: 2px 0;
+    }
+    #shape-result-canvas-wrap {
+      border-radius: 8px; background: #0d1117;
+      height: 200px; position: relative; overflow: hidden; margin-bottom: 14px;
+    }
+
+    /* ── 主功能 Tab 切换 ── */
+    #panel-tabs {
+      display: flex;
+      border-bottom: 1px solid #21262d;
+      flex-shrink: 0;
+      background: #161b22;
+    }
+    .panel-tab {
+      flex: 1;
+      padding: 10px 4px;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      color: #8b949e;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      user-select: none;
+    }
+    .panel-tab:hover { color: #e6edf3; }
+    .panel-tab.active { color: #58a6ff; border-bottom-color: #58a6ff; }
+
+    #tab-manual, #tab-smart { display: none; }
+    #tab-manual.tab-active, #tab-smart.tab-active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ── 智能包装 Tab 样式 ── */
+    #sp-scroll {
+      flex: 1; overflow-y: auto; padding: 16px;
+    }
+    #sp-scroll::-webkit-scrollbar { width: 4px; }
+    #sp-scroll::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+
+    /* 图片上传区 */
+    .sp-upload-area {
+      border: 2px dashed #30363d; border-radius: 10px;
+      padding: 24px 16px; text-align: center; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      margin-bottom: 12px;
+    }
+    .sp-upload-area:hover { border-color: #58a6ff; background: rgba(88,166,255,0.04); }
+    .sp-upload-area.dragging { border-color: #58a6ff; background: rgba(88,166,255,0.08); }
+    .sp-upload-icon { font-size: 32px; margin-bottom: 8px; }
+    .sp-upload-text { font-size: 13px; color: #8b949e; }
+    .sp-upload-sub  { font-size: 11px; color: #484f58; margin-top: 4px; }
+
+    /* 图片缩略图行 */
+    #sp-thumb-row {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;
+    }
+    .sp-thumb {
+      position: relative; width: 72px; height: 72px;
+      border-radius: 6px; overflow: hidden; background: #0d1117;
+      border: 1px solid #21262d; flex-shrink: 0;
+    }
+    .sp-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sp-thumb-del {
+      position: absolute; top: 2px; right: 2px;
+      background: rgba(0,0,0,0.65); color: #f85149; border: none;
+      border-radius: 50%; width: 18px; height: 18px;
+      font-size: 11px; cursor: pointer; display: flex;
+      align-items: center; justify-content: center; line-height: 1;
+    }
+
+    /* 识别结果区 */
+    #sp-result-box {
+      display: none;
+      background: #0d1117; border: 1px solid #21262d;
+      border-radius: 8px; padding: 12px; margin-bottom: 12px;
+    }
+    #sp-result-box.show { display: block; }
+    .sp-result-title { font-size: 11px; color: #58a6ff; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+
+    .sp-field-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;
+    }
+    .sp-field-row.cols3 { grid-template-columns: 1fr 1fr 1fr; }
+    .sp-field-group { display: flex; flex-direction: column; gap: 3px; }
+    .sp-field-label { font-size: 10px; color: #484f58; }
+    .sp-field-input {
+      background: #21262d; border: 1px solid #30363d;
+      border-radius: 4px; color: #e6edf3; font-size: 12px;
+      padding: 5px 7px; outline: none; transition: border-color 0.15s; width: 100%;
+    }
+    .sp-field-input:focus { border-color: #58a6ff; }
+    .sp-field-select {
+      background: #21262d; border: 1px solid #30363d;
+      border-radius: 4px; color: #e6edf3; font-size: 12px;
+      padding: 5px 7px; outline: none; width: 100%; cursor: pointer;
+    }
+    .sp-fragility-row {
+      display: flex; gap: 6px; margin-bottom: 8px;
+    }
+    .sp-frag-btn {
+      flex: 1; padding: 6px 4px; border-radius: 6px; border: 1px solid #30363d;
+      background: transparent; color: #8b949e; font-size: 11px; font-weight: 600;
+      cursor: pointer; text-align: center; transition: all 0.15s;
+    }
+    .sp-frag-btn[data-level="high"].active  { background: #3d1f1f; border-color: #f85149; color: #f85149; }
+    .sp-frag-btn[data-level="medium"].active{ background: #2d2a1a; border-color: #f0883e; color: #f0883e; }
+    .sp-frag-btn[data-level="low"].active   { background: #1a2d1e; border-color: #3fb950; color: #3fb950; }
+
+    /* 辅材推荐区 */
+    #sp-materials-box {
+      display: none;
+      background: #0d1117; border: 1px solid #21262d;
+      border-radius: 8px; padding: 12px; margin-bottom: 12px;
+    }
+    #sp-materials-box.show { display: block; }
+    .sp-mat-item {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: 8px 0; border-bottom: 1px solid #21262d;
+    }
+    .sp-mat-item:last-child { border-bottom: none; }
+    .sp-mat-name { font-size: 12px; color: #e6edf3; font-weight: 500; }
+    .sp-mat-desc { font-size: 11px; color: #484f58; margin-top: 2px; }
+    .sp-mat-price { font-size: 12px; color: #f0883e; font-weight: 600; flex-shrink: 0; margin-left: 8px; }
+    .sp-mat-total {
+      display: flex; justify-content: space-between;
+      padding-top: 8px; margin-top: 4px;
+      font-size: 12px; font-weight: 600; color: #e6edf3;
+    }
+
+    /* 利润率卡片 */
+    #sp-profit-box {
+      display: none;
+      background: #0d1117; border: 1px solid #21262d;
+      border-radius: 8px; padding: 12px; margin-bottom: 12px;
+    }
+    #sp-profit-box.show { display: block; }
+    .sp-profit-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px;
+    }
+    .sp-profit-card {
+      background: #161b22; border: 1px solid #21262d;
+      border-radius: 6px; padding: 10px; text-align: center;
+    }
+    .sp-profit-card-label { font-size: 10px; color: #484f58; margin-bottom: 4px; }
+    .sp-profit-card-val   { font-size: 18px; font-weight: 700; color: #58a6ff; }
+    .sp-profit-card-unit  { font-size: 10px; color: #484f58; margin-top: 2px; }
+    .sp-score-bar {
+      height: 6px; background: #21262d; border-radius: 3px; overflow: hidden; margin-top: 8px;
+    }
+    .sp-score-fill {
+      height: 100%; border-radius: 3px;
+      background: linear-gradient(90deg, #f85149, #f0883e, #3fb950);
+      transition: width 0.5s ease;
+    }
+    .sp-result-row {
+      display: flex; justify-content: space-between; font-size: 11px; color: #8b949e; margin: 4px 0;
+    }
+    .sp-result-row strong { color: #e6edf3; }
+
+    /* Embedding Provider 切换条 */
+    .sp-provider-bar {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      background: #161b22; border: 1px solid #21262d;
+      border-radius: 8px; padding: 8px 12px; margin-bottom: 12px;
+    }
+    .sp-provider-label { font-size: 12px; color: #8b949e; white-space: nowrap; }
+    .sp-provider-toggle {
+      display: flex; background: #0d1117; border-radius: 6px; padding: 2px; gap: 2px;
+    }
+    .sp-pvd-btn {
+      padding: 4px 14px; border: none; border-radius: 4px; font-size: 12px;
+      cursor: pointer; background: transparent; color: #8b949e; transition: all .15s;
+    }
+    .sp-pvd-btn.active { background: #1f6feb; color: #fff; font-weight: 600; }
+    .sp-pvd-btn:not(.active):hover { color: #e6edf3; }
+    .sp-pvd-status { font-size: 11px; color: #3fb950; margin-left: auto; }
+    .sp-pvd-warn { color: #f0883e !important; }
+
+    /* 智能包装底部操作 */
+    #sp-footer {
+      padding: 12px 16px; border-top: 1px solid #21262d;
+      display: flex; gap: 8px; flex-shrink: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>智能包装系统</h1>
+    <span>填写货物和箱型，自动生成装箱方案并播放演示</span>
+  </header>
+
+  <main>
+    <!-- ── 左侧输入面板 ── -->
+    <div id="input-panel">
+      <!-- Tab 切换（智能包装 tab 暂时隐藏，panel-tabs 整体隐藏直到有第二个可见 tab） -->
+      <div id="panel-tabs" style="display:none">
+        <div class="panel-tab active" id="ptab-manual" onclick="switchPanelTab('manual')">手动装箱</div>
+        <div class="panel-tab" id="ptab-smart" onclick="switchPanelTab('smart')">✦ 智能包装</div>
+      </div>
+
+      <!-- ── 手动装箱 Tab ── -->
+      <div id="tab-manual" class="tab-active">
+        <div id="input-scroll">
+          <!-- 货物列表 -->
+          <div class="section-title">货物列表</div>
+          <div id="items-container"></div>
+          <div class="import-row">
+            <button class="add-btn" onclick="addItem()">＋ 添加货物</button>
+            <button class="import-btn" onclick="document.getElementById('import-items-file').click()">⬆ 批量导入</button>
+            <input type="file" id="import-items-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="importItems(this)" />
+          </div>
+          <div style="margin-top:5px;text-align:right">
+            <button class="tpl-link" onclick="downloadItemTemplate()">⬇ 下载货物导入模板</button>
+          </div>
+
+          <!-- AI 模式开关 -->
+          <div class="section-title" style="margin-top:20px">计算模式</div>
+          <div class="ai-toggle-wrap">
+            <div>
+              <div class="ai-toggle-label">AI 自动选箱模式</div>
+              <div class="ai-toggle-sub">由 Claude 自动分析并选择最优箱型</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="ai-mode-toggle" onchange="toggleAIMode(this.checked)" />
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+
+          <!-- 箱型设置 -->
+          <div class="section-title" style="margin-top:12px" id="bin-section-title">箱型设置</div>
+          <div class="bin-section" id="bin-section-wrap">
+            <!-- 模式切换 -->
+            <div class="bin-mode-toggle">
+              <button class="bin-mode-btn active" id="bin-mode-preset" onclick="switchBinMode('preset')">包材库</button>
+              <button class="bin-mode-btn" id="bin-mode-custom" onclick="switchBinMode('custom')">自定义尺寸</button>
+            </div>
+            <!-- 包材库 -->
+            <div id="bin-preset-wrap">
+              <div class="catalog-search-bar">
+                <input id="catalog-q" class="catalog-search-input" type="text"
+                       placeholder="搜索包材名称 / SKU…"
+                       oninput="debouncedCatalogSearch()" autocomplete="off" />
+                <select id="catalog-type" class="catalog-type-select" onchange="onCatalogSearch()">
+                  <option value="">全部</option>
+                  <option value="硬包材">硬包材</option>
+                  <option value="软包材">软包材</option>
+                </select>
+              </div>
+              <div id="catalog-results" class="catalog-search-results" style="display:none"></div>
+              <div id="catalog-chips" class="catalog-chips"></div>
+              <div id="catalog-hint" class="catalog-hint">
+                AI 模式下无需选择，系统自动从 8267 种包材中匹配最优方案
+              </div>
+            </div>
+            <!-- 自定义尺寸 -->
+            <div id="bin-custom-wrap" style="display:none">
+              <div id="custom-bins-container"></div>
+              <div class="import-row">
+                <button class="add-btn" onclick="addCustomBin()">＋ 添加箱型</button>
+                <button class="import-btn" onclick="openCatalogModal()">📦 从包材库选取</button>
+                <button class="import-btn" onclick="document.getElementById('import-bins-file').click()">⬆ 批量导入</button>
+                <input type="file" id="import-bins-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="importBins(this)" />
+              </div>
+              <div style="margin-top:5px;display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:11px;color:#8b949e;">可添加多个箱型，系统自动从中选出最优方案</span>
+                <button class="tpl-link" onclick="downloadBinTemplate()">⬇ 下载箱型模板</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="input-footer">
+          <button class="demo-btn" onclick="loadDemo()">示例数据</button>
+          <button class="calc-btn" id="calc-btn" onclick="calculate()">开始计算</button>
+        </div>
+      </div>
+
+      <!-- ── 智能包装 Tab ── -->
+      <div id="tab-smart">
+        <div id="sp-scroll">
+          <!-- Embedding Provider 切换 -->
+          <div class="sp-provider-bar">
+            <span class="sp-provider-label">Embedding 引擎</span>
+            <div class="sp-provider-toggle">
+              <button class="sp-pvd-btn" id="pvd-voyage" onclick="spSetProvider('voyage')">Voyage API</button>
+              <button class="sp-pvd-btn" id="pvd-local"  onclick="spSetProvider('local')">BGE-M3 本地</button>
+            </div>
+            <span class="sp-pvd-status" id="sp-pvd-status">加载中...</span>
+          </div>
+
+          <!-- Step 1: 图片上传 -->
+          <div class="section-title">Step 1 · 上传产品图片</div>
+          <div class="sp-upload-area" id="sp-upload-area"
+               onclick="document.getElementById('sp-file-input').click()"
+               ondragover="event.preventDefault();this.classList.add('dragging')"
+               ondragleave="this.classList.remove('dragging')"
+               ondrop="spHandleDrop(event)">
+            <div class="sp-upload-icon">📷</div>
+            <div class="sp-upload-text">点击上传 或 拖拽图片到此处</div>
+            <div class="sp-upload-sub">支持 JPG / PNG，可多张（多角度）</div>
+          </div>
+          <input type="file" id="sp-file-input" accept="image/*" multiple style="display:none"
+                 onchange="spHandleFiles(this.files)" />
+          <div id="sp-thumb-row"></div>
+
+          <!-- Step 2: 识别结果 + 确认 -->
+          <div class="section-title" style="margin-top:4px">Step 2 · 确认识别结果</div>
+          <div id="sp-result-box">
+            <div class="sp-result-title">识别结果（可手动修改）</div>
+            <div class="sp-field-row">
+              <div class="sp-field-group">
+                <div class="sp-field-label">产品品类</div>
+                <input class="sp-field-input" id="sp-category" type="text" placeholder="如：手机" />
+              </div>
+              <div class="sp-field-group">
+                <div class="sp-field-label">重量 (kg)</div>
+                <input class="sp-field-input" id="sp-weight" type="number" value="0.5" min="0.01" step="0.01" />
+              </div>
+            </div>
+            <div class="sp-field-label" style="margin-bottom:5px">脆弱等级</div>
+            <div class="sp-fragility-row">
+              <button class="sp-frag-btn" data-level="high"   onclick="spSetFragility('high')">高 (易碎)</button>
+              <button class="sp-frag-btn" data-level="medium" onclick="spSetFragility('medium')">中</button>
+              <button class="sp-frag-btn" data-level="low"    onclick="spSetFragility('low')">低 (耐摔)</button>
+            </div>
+            <div class="sp-field-label" style="margin-bottom:5px">产品净尺寸 (cm)</div>
+            <div class="sp-field-row cols3">
+              <div class="sp-field-group">
+                <div class="sp-field-label">长</div>
+                <input class="sp-field-input" id="sp-length" type="number" min="0.1" step="0.1" placeholder="L" />
+              </div>
+              <div class="sp-field-group">
+                <div class="sp-field-label">宽</div>
+                <input class="sp-field-input" id="sp-width" type="number" min="0.1" step="0.1" placeholder="W" />
+              </div>
+              <div class="sp-field-group">
+                <div class="sp-field-label">高</div>
+                <input class="sp-field-input" id="sp-height" type="number" min="0.1" step="0.1" placeholder="H" />
+              </div>
+            </div>
+            <div class="sp-field-row" style="margin-top:4px">
+              <div class="sp-field-group">
+                <div class="sp-field-label">数量</div>
+                <input class="sp-field-input" id="sp-qty" type="number" value="1" min="1" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: 辅材推荐 -->
+          <div class="section-title" style="margin-top:4px">Step 3 · 辅材推荐</div>
+          <div id="sp-materials-box">
+            <div class="sp-result-title">推荐辅材清单</div>
+            <div id="sp-materials-list"></div>
+            <div class="sp-mat-total">
+              <span>辅材总成本</span>
+              <span id="sp-mat-total-val">—</span>
+            </div>
+            <div class="sp-result-row" style="margin-top:6px">
+              <span>加辅材后实装尺寸</span>
+              <strong id="sp-packed-dims">—</strong>
+            </div>
+          </div>
+
+          <!-- Step 4: 利润率结果 -->
+          <div class="section-title" style="margin-top:4px">Step 4 · 利润率分析</div>
+          <div id="sp-profit-box">
+            <div class="sp-result-title">包材效率分析</div>
+            <div class="sp-profit-grid">
+              <div class="sp-profit-card">
+                <div class="sp-profit-card-label">外箱规格</div>
+                <div class="sp-profit-card-val" id="sp-box-type" style="font-size:13px">—</div>
+                <div class="sp-profit-card-unit" id="sp-box-dims">—</div>
+              </div>
+              <div class="sp-profit-card">
+                <div class="sp-profit-card-label">空间利用率</div>
+                <div class="sp-profit-card-val" id="sp-space-util">—</div>
+                <div class="sp-profit-card-unit">产品体积/箱体积</div>
+              </div>
+              <div class="sp-profit-card">
+                <div class="sp-profit-card-label">辅材成本</div>
+                <div class="sp-profit-card-val" id="sp-mat-cost" style="color:#f0883e">—</div>
+                <div class="sp-profit-card-unit">元/次</div>
+              </div>
+              <div class="sp-profit-card">
+                <div class="sp-profit-card-label">单位体积成本</div>
+                <div class="sp-profit-card-val" id="sp-cost-cm3" style="font-size:14px;color:#f0883e">—</div>
+                <div class="sp-profit-card-unit">元/cm³</div>
+              </div>
+            </div>
+            <div class="sp-result-row">
+              <span>综合效率评分</span>
+              <strong id="sp-score-val" style="color:#58a6ff">—</strong>
+            </div>
+            <div class="sp-score-bar">
+              <div class="sp-score-fill" id="sp-score-fill" style="width:0%"></div>
+            </div>
+            <div class="sp-result-row" style="margin-top:8px">
+              <span>产品体积</span>
+              <strong id="sp-prod-vol">—</strong>
+            </div>
+            <div class="sp-result-row">
+              <span>箱体体积</span>
+              <strong id="sp-box-vol">—</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- 智能包装底部操作 -->
+        <div id="sp-footer">
+          <button class="calc-btn" id="sp-recognize-btn" onclick="spRecognize()"
+                  style="background:#0d419d;flex:none;padding:8px 14px;">AI识别</button>
+          <button class="calc-btn" id="sp-calc-btn" onclick="spCalculate()">计算最优包装</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 右侧可视化区域 ── -->
+    <div id="viz-panel">
+      <div id="canvas-wrap">
+        <!-- 空状态 -->
+        <div id="empty-state">
+          <div class="icon">📦</div>
+          <p>填写货物信息后点击「开始计算」</p>
+        </div>
+
+        <!-- 加载遮罩 -->
+        <div id="loading-mask">
+          <div class="spinner"></div>
+          <span style="font-size:13px;color:#8b949e">正在计算装箱方案...</span>
+        </div>
+
+        <!-- 错误提示 -->
+        <div id="error-bar"></div>
+
+        <!-- 箱子 Tab -->
+        <div id="bin-tabs-bar"></div>
+
+        <!-- 统计信息 -->
+        <div id="stats-bar"></div>
+
+        <!-- AI 分析说明 -->
+        <div id="ai-summary"><strong><span id="ai-summary-title">AI 分析说明</span><span id="ai-summary-badge"></span></strong><span id="ai-summary-text"></span><div id="ai-error-tip" style="display:none;margin-top:4px;font-size:10px;color:#f85149;word-break:break-all"></div></div>
+
+        <!-- 新包材对比面板 -->
+        <div id="compare-panel"></div>
+      </div>
+
+      <!-- 悬停提示 -->
+      <div id="item-tooltip"></div>
+
+  <!-- 隐藏文件输入（拍照/上传）-->
+  <input type="file" id="shape-photo-input" accept="image/*" style="display:none" />
+
+  <!-- 包材库 Modal -->
+  <div id="catalog-modal">
+    <div id="catalog-box">
+      <div id="catalog-header">
+        <span>📦 包材库</span>
+        <button id="catalog-close" onclick="closeCatalogModal()">×</button>
+      </div>
+      <div id="catalog-filter-row">
+        <input id="catalog-search" placeholder="搜索 SKU / 名称 / 包材类型..." oninput="catalogSearch()" />
+        <select id="catalog-type-select" onchange="catalogSearch()">
+          <option value="">全部类型</option>
+          <option value="硬包材">硬包材</option>
+          <option value="软包材">软包材</option>
+        </select>
+      </div>
+      <div id="catalog-list"></div>
+      <div id="catalog-footer">
+        <span id="catalog-total-tip">共 0 条</span>
+        <div id="catalog-pagination">
+          <button class="catalog-page-btn" id="catalog-prev" onclick="catalogChangePage(-1)">‹ 上一页</button>
+          <span id="catalog-page-tip" style="padding:0 6px;color:#8b949e;font-size:11px"></span>
+          <button class="catalog-page-btn" id="catalog-next" onclick="catalogChangePage(1)">下一页 ›</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 形状识别 Modal -->
+  <div id="shape-modal">
+    <div id="shape-modal-box">
+      <div id="shape-modal-header">
+        <span>📷 产品形状识别</span>
+        <button id="shape-modal-close" onclick="closeShapeModal()">×</button>
+      </div>
+
+      <!-- 第一阶段：拍摄 3 张照片 -->
+      <div id="shape-capture-phase">
+        <div id="shape-capture-hint">请从 3 个角度拍摄产品照片，多角度有助于提高识别精度（至少拍 1 张）</div>
+        <div id="shape-capture-slots">
+          <div class="capture-slot" id="slot-front" onclick="captureView('front')">
+            <div class="slot-label">正面</div>
+            <div class="slot-icon">📷</div>
+            <div class="slot-hint">点击拍摄</div>
+            <img class="slot-thumb" style="display:none" alt="正面" />
+          </div>
+          <div class="capture-slot" id="slot-side" onclick="captureView('side')">
+            <div class="slot-label">侧面</div>
+            <div class="slot-icon">📷</div>
+            <div class="slot-hint">点击拍摄</div>
+            <img class="slot-thumb" style="display:none" alt="侧面" />
+          </div>
+          <div class="capture-slot" id="slot-top" onclick="captureView('top')">
+            <div class="slot-label">顶面</div>
+            <div class="slot-icon">📷</div>
+            <div class="slot-hint">点击拍摄</div>
+            <img class="slot-thumb" style="display:none" alt="顶面" />
+          </div>
+        </div>
+        <div id="shape-capture-footer">
+          <button class="shape-retake-btn" onclick="closeShapeModal()">取消</button>
+          <button class="shape-confirm-btn" id="btn-start-recognition" onclick="startRecognition()" disabled>开始识别</button>
+        </div>
+      </div>
+
+      <!-- 第二阶段：识别结果 -->
+      <div id="shape-result-phase" style="display:none">
+        <!-- 已拍摄缩略图 -->
+        <div id="shape-thumb-row"></div>
+
+        <!-- Three.js 3D 预览 -->
+        <div id="shape-result-canvas-wrap">
+          <canvas id="shape-preview-canvas"></canvas>
+          <div id="shape-preview-loading">
+            <div class="spinner"></div>
+            <span>AI 识别中...</span>
+          </div>
+        </div>
+
+        <div id="shape-type-row">
+          <span class="shape-type-badge" id="shape-type-text">识别中</span>
+          <span id="shape-note-text"></span>
+        </div>
+
+        <div id="shape-confidence-row">
+          <span>识别置信度</span>
+          <div id="shape-confidence-track">
+            <div id="shape-confidence-fill"></div>
+          </div>
+          <span id="shape-confidence-text">—</span>
+        </div>
+
+        <div id="shape-dims-row">
+          <div class="shape-dim-group">
+            <div class="shape-dim-label">长 (cm)</div>
+            <input class="shape-dim-input" id="shape-dim-l" type="number" min="0.1" step="0.1" placeholder="长" />
+          </div>
+          <div class="shape-dim-group">
+            <div class="shape-dim-label">宽 (cm)</div>
+            <input class="shape-dim-input" id="shape-dim-w" type="number" min="0.1" step="0.1" placeholder="宽" />
+          </div>
+          <div class="shape-dim-group">
+            <div class="shape-dim-label">高 (cm)</div>
+            <input class="shape-dim-input" id="shape-dim-h" type="number" min="0.1" step="0.1" placeholder="高" />
+          </div>
+        </div>
+        <div id="shape-dim-hint">尺寸为 AI 估算，确认前请与实物核对，可直接修改数值（3D 预览实时更新）</div>
+
+        <div id="shape-3d-gen-row" style="margin:8px 0 4px;">
+          <div style="display:flex;gap:6px;margin-bottom:6px;">
+            <input id="tripo-api-key" type="password" placeholder="Tripo3D API Key（tsk_...）"
+              style="flex:1;background:#0d1117;border:1px solid #30363d;border-radius:6px;
+                     padding:5px 8px;color:#e6edf3;font-size:12px;outline:none;"
+              oninput="localStorage.setItem('tripoApiKey', this.value)"
+            />
+            <a href="https://platform.tripo3d.ai" target="_blank"
+               style="font-size:11px;color:#58a6ff;align-self:center;white-space:nowrap;text-decoration:none;">
+              获取 Key →
+            </a>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button class="shape-retake-btn" id="btn-gen-tripo" onclick="generateTripo3D()"
+              style="flex:1;background:#1f2d4a;border-color:#388bfd;color:#58a6ff;">
+              ✦ Tripo3D 生成（推荐）
+            </button>
+            <button class="shape-retake-btn" id="btn-gen-3d" onclick="generateTripoSR()"
+              style="flex:1;background:#1f4a2e;border-color:#238636;color:#3fb950;">
+              本地 TripoSR
+            </button>
+          </div>
+          <div id="gen-3d-status" style="font-size:11px;color:#8b949e;margin-top:4px;min-height:16px;"></div>
+        </div>
+
+        <div id="shape-modal-footer">
+          <button class="shape-retake-btn" onclick="retakePhoto()">重新拍摄</button>
+          <button class="shape-confirm-btn" onclick="confirmShape()">确认并填入</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+      <!-- 动画控制栏 -->
+      <div id="anim-bar">
+        <button class="anim-btn" id="btn-play"  onclick="playAnim()"  title="播放" disabled>▶</button>
+        <button class="anim-btn" id="btn-pause" onclick="pauseAnim()" title="暂停" disabled>⏸</button>
+        <button class="anim-btn" id="btn-reset" onclick="resetAnim()" title="重置" disabled>↺</button>
+
+        <div id="progress-wrap">
+          <div id="progress-label">— / — 件货物</div>
+          <div id="progress-track"><div id="progress-fill"></div></div>
+        </div>
+
+        <div class="speed-wrap">
+          <span>速度</span>
+          <input type="range" id="speed-slider" min="1" max="5" value="3" />
+          <span id="speed-label">1x</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Three.js -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "/static/vendor/three.module.js",
+      "three/addons/utils/BufferGeometryUtils.js": "/static/vendor/BufferGeometryUtils.js"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from '/static/vendor/three.module.js';
+    import { OrbitControls } from '/static/vendor/OrbitControls.js';
+    window._THREE = THREE;            // 暴露 THREE 给普通脚本使用
+
+    // GLTFLoader 用动态 import，加载失败不影响主渲染
+    import('/static/vendor/GLTFLoader.js').then(m => {
+      window._GLTFLoader = m.GLTFLoader;
+    }).catch(e => console.warn('[GLTFLoader] 加载失败，modal 3D 预览不可用:', e));
+
+    // ── 颜色 ─────────────────────────────────────────────────────────────────
+    const PALETTE = [
+      0xFF6B6B, 0x4ECDC4, 0x45B7D1, 0x96CEB4, 0xFECA57,
+      0xFF9FF3, 0x54A0FF, 0xA29BFE, 0x00D2D3, 0xFF9F43,
+      0x6C5CE7, 0xFD79A8, 0x55EFC4, 0xFDCB6E, 0xE17055,
+    ];
+    const ITEM_COLORS = {};  // id → hex string
+
+    // ── Three.js 变量 ─────────────────────────────────────────────────────────
+    let scene, camera, renderer, controls;
+    let sceneReady = false;
+
+    // ── 动画状态 ──────────────────────────────────────────────────────────────
+    let animItems    = [];   // [{mesh, targetY, startY, color, duration, startTime, state}]
+    let animPlaying  = false;
+    let animIndex    = 0;    // 当前播放到第几件
+    let animStartTime = 0;
+    let totalItems   = 0;
+    let placedCount  = 0;
+    let packingData  = null;
+    let currentBin   = 0;
+
+    // mesh → 产品信息映射（用于悬停提示）
+    const meshToItem = new Map();
+
+    // 速度映射: slider 1~5 → 持续时间(ms)
+    const SPEED_MAP = [0, 1500, 900, 500, 250, 100];
+    const SPEED_LABEL = ['', '0.5x', '1x', '1.5x', '2x', '3x'];
+    let itemDuration = 500;
+
+    // ── 初始化 Three.js ───────────────────────────────────────────────────────
+    function initThree() {
+      if (sceneReady) return;
+      const wrap = document.getElementById('canvas-wrap');
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x0d1117);
+
+      camera = new THREE.PerspectiveCamera(45, wrap.clientWidth / wrap.clientHeight, 1, 5000);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+      wrap.appendChild(renderer.domElement);
+
+      controls = new OrbitControls(camera, renderer.domElement);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.06;
+      controls.addEventListener('change', () => { _needsRender = true; });
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+      const dir = new THREE.DirectionalLight(0xffffff, 0.9);
+      dir.position.set(300, 500, 300);
+      scene.add(dir);
+
+      window.addEventListener('resize', () => {
+        camera.aspect = wrap.clientWidth / wrap.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+      });
+
+      // ── 悬停提示 raycaster ─────────────────────────────────────────────────
+      const raycaster = new THREE.Raycaster();
+      const pointer   = new THREE.Vector2();
+      const tooltip   = document.getElementById('item-tooltip');
+
+      renderer.domElement.addEventListener('mousemove', (e) => {
+        if (!animItems.length) return;
+        const rect = renderer.domElement.getBoundingClientRect();
+        pointer.x =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+        pointer.y = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(pointer, camera);
+        const placedMeshes = animItems.filter(a => a.state === 'PLACED').map(a => a.mesh);
+        const hits = raycaster.intersectObjects(placedMeshes);
+
+        if (hits.length) {
+          const info = meshToItem.get(hits[0].object);
+          if (info) {
+            tooltip.style.display = 'block';
+            tooltip.style.left = (e.clientX + 16) + 'px';
+            tooltip.style.top  = (e.clientY - 12) + 'px';
+            tooltip.innerHTML  = `
+              <div class="tip-name">${info.name}</div>
+              <div class="tip-row">尺寸：<strong>${info.origL}×${info.origW}×${info.origH} cm</strong></div>
+              <div class="tip-row">重量：<strong>${info.weight} kg</strong></div>
+            `;
+          }
+        } else {
+          tooltip.style.display = 'none';
+        }
+      });
+
+      renderer.domElement.addEventListener('mouseleave', () => {
+        tooltip.style.display = 'none';
+      });
+
+      sceneReady = true;
+      rafLoop();
+    }
+
+    // ── 主渲染循环 ────────────────────────────────────────────────────────────
+    let _lastRafTime = 0;
+    let _needsRender = true;   // controls 交互时置 true，强制渲染一帧
+    function rafLoop(ts) {
+      requestAnimationFrame(rafLoop);
+      const idle = !animPlaying;
+      // 空闲时限速 10fps，减少 CPU/GPU 负担
+      if (idle && !_needsRender && ts - _lastRafTime < 100) return;
+      _lastRafTime = ts;
+      _needsRender = false;
+      if (animPlaying) tickAnimation();
+      controls && controls.update();
+      renderer && renderer.render(scene, camera);
+    }
+
+    // ── 清空场景 ──────────────────────────────────────────────────────────────
+    function clearScene() {
+      if (!sceneReady) return;
+      const toRemove = scene.children.filter(
+        c => !(c instanceof THREE.AmbientLight) && !(c instanceof THREE.DirectionalLight)
+      );
+      toRemove.forEach(obj => {
+        scene.remove(obj);
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) {
+          if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+          else obj.material.dispose();
+        }
+      });
+      animItems = [];
+      meshToItem.clear();
+    }
+
+    // ── 绘制箱体框架和地面 ────────────────────────────────────────────────────
+    function drawBinFrame(L, W, H) {
+      // 地面网格
+      const grid = new THREE.GridHelper(Math.max(L, W) * 2.5, 20, 0x21262d, 0x21262d);
+      grid.position.set(L / 2, -0.5, W / 2);
+      scene.add(grid);
+
+      // 箱体线框
+      const geo  = new THREE.BoxGeometry(L, H, W);
+      const edge = new THREE.EdgesGeometry(geo);
+      const line = new THREE.LineSegments(edge, new THREE.LineBasicMaterial({ color: 0x58a6ff, opacity: 0.5, transparent: true }));
+      line.position.set(L / 2, H / 2, W / 2);
+      scene.add(line);
+
+      // 底面半透明
+      const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(L, W),
+        new THREE.MeshBasicMaterial({ color: 0x1f6feb, opacity: 0.06, transparent: true, side: THREE.DoubleSide })
+      );
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.set(L / 2, 0, W / 2);
+      scene.add(floor);
+    }
+
+    // ── 准备动画数据（按层级从低到高排列，同类产品同色）────────────────────
+    function prepareAnimation(bin) {
+      const { length: L, width: W, height: H } = bin.dimensions;
+
+      // 1. 按层级排序：z坐标（高度）从低到高，同层按y/x排序
+      const sortedItems = [...bin.items].sort((a, b) => {
+        if (a.position.z !== b.position.z) return a.position.z - b.position.z;
+        if (a.position.y !== b.position.y) return a.position.y - b.position.y;
+        return a.position.x - b.position.x;
+      });
+
+      // 2. 为每种产品（按基础名称）分配固定颜色
+      const nameColorMap = {};
+      let colorIdxCounter = 0;
+      sortedItems.forEach(item => {
+        const base = item.id.replace(/-\d+$/, '');
+        if (!(base in nameColorMap)) nameColorMap[base] = colorIdxCounter++;
+      });
+
+      sortedItems.forEach((item, i) => {
+        const base  = item.id.replace(/-\d+$/, '');
+        const color = PALETTE[nameColorMap[base] % PALETTE.length];
+        const p = item.position;
+        const d = item.dimensions;
+
+        // Three.js 中心坐标（y轴朝上）
+        const cx = p.x + d.length / 2;
+        const cy = p.z + d.height / 2;
+        const cz = p.y + d.width  / 2;
+
+        const geo = new THREE.BoxGeometry(d.length, d.height, d.width);
+        const mat = new THREE.MeshPhongMaterial({ color, opacity: 0, transparent: true, shininess: 60 });
+        const mesh = new THREE.Mesh(geo, mat);
+
+        // 边框线
+        const edgeGeo = new THREE.EdgesGeometry(geo);
+        const edgeMat = new THREE.LineBasicMaterial({ color: 0xffffff, opacity: 0, transparent: true });
+        const edgeMesh = new THREE.LineSegments(edgeGeo, edgeMat);
+
+        // 初始位置：箱体上方
+        mesh.position.set(cx, H + 80 + i * 10, cz);
+        edgeMesh.position.copy(mesh.position);
+
+        scene.add(mesh);
+        scene.add(edgeMesh);
+
+        // 记录 mesh → 产品信息，用于悬停提示
+        const meta = window._itemMeta && window._itemMeta[item.id];
+        meshToItem.set(mesh, {
+          name:   base,
+          origL:  meta ? meta.length : d.length,
+          origW:  meta ? meta.width  : d.width,
+          origH:  meta ? meta.height : d.height,
+          weight: meta ? meta.weight : '—',
+        });
+
+        animItems.push({
+          mesh, edgeMesh, mat, edgeMat,
+          cx, targetY: cy,
+          startY: H + 80 + i * 10,
+          state: 'WAITING',
+          startTime: 0,
+          colorHex: '#' + color.toString(16).padStart(6, '0'),
+          id: item.id,
+        });
+      });
+    }
+
+    // ── 动画 tick ─────────────────────────────────────────────────────────────
+    function tickAnimation() {
+      const now = Date.now();
+
+      // 触发下一个等待的货物开始下落
+      if (animIndex < animItems.length) {
+        const cur = animItems[animIndex];
+        if (cur.state === 'WAITING') {
+          cur.state = 'FALLING';
+          cur.startTime = now;
+        }
+      }
+
+      let allDone = true;
+
+      animItems.forEach((item, idx) => {
+        if (item.state === 'WAITING') { allDone = false; return; }
+        if (item.state === 'PLACED')  return;
+
+        allDone = false;
+        const elapsed  = now - item.startTime;
+        const progress = Math.min(elapsed / itemDuration, 1);
+        const eased    = easeOutCubic(progress);
+
+        const curY = item.startY + (item.targetY - item.startY) * eased;
+        item.mesh.position.y     = curY;
+        item.edgeMesh.position.y = curY;
+
+        // 淡入
+        const opacity = Math.min(progress * 2, 0.78);
+        item.mat.opacity     = opacity;
+        item.edgeMat.opacity = Math.min(progress * 2, 0.3);
+
+        if (progress >= 1) {
+          item.state = 'PLACED';
+          item.mesh.position.y     = item.targetY;
+          item.edgeMesh.position.y = item.targetY;
+          item.mat.opacity         = 0.78;
+          item.edgeMat.opacity     = 0.3;
+          placedCount++;
+          animIndex++;
+          updateProgress();
+        }
+      });
+
+      if (allDone && animIndex >= animItems.length) {
+        animPlaying = false;
+        document.getElementById('btn-play').disabled  = false;
+        document.getElementById('btn-pause').disabled = true;
+        updateProgress();
+      }
+    }
+
+    function easeOutCubic(t) {
+      return 1 - Math.pow(1 - t, 3);
+    }
+
+    // ── 动画控制 ──────────────────────────────────────────────────────────────
+    window.playAnim = function () {
+      if (!animItems.length) return;
+      animPlaying = true;
+      document.getElementById('btn-play').disabled  = true;
+      document.getElementById('btn-pause').disabled = false;
+    };
+
+    window.pauseAnim = function () {
+      animPlaying = false;
+      // 保存暂停时各item的剩余时间
+      const now = Date.now();
+      animItems.forEach(item => {
+        if (item.state === 'FALLING') {
+          item._pausedElapsed = now - item.startTime;
+        }
+      });
+      document.getElementById('btn-play').disabled  = false;
+      document.getElementById('btn-pause').disabled = true;
+    };
+
+    window.resetAnim = function () {
+      animPlaying  = false;
+      animIndex    = 0;
+      placedCount  = 0;
+      showBin(currentBin);
+      updateProgress();
+    };
+
+    // ── 进度更新 ──────────────────────────────────────────────────────────────
+    function updateProgress() {
+      const total = animItems.length;
+      const pct   = total ? (placedCount / total) * 100 : 0;
+      document.getElementById('progress-label').textContent = `${placedCount} / ${total} 件货物`;
+      document.getElementById('progress-fill').style.width  = pct + '%';
+    }
+
+    // ── 切换显示箱子 ──────────────────────────────────────────────────────────
+    function showBin(binIndex) {
+      currentBin  = binIndex;
+      animIndex   = 0;
+      placedCount = 0;
+      animPlaying = false;
+
+      clearScene();
+
+      const bin = packingData.packed_bins[binIndex];
+      const { length: L, width: W, height: H } = bin.dimensions;
+
+      drawBinFrame(L, W, H);
+      prepareAnimation(bin);
+      updateProgress();
+
+      // 更新统计
+      const productCount = {};
+      bin.items.forEach(item => {
+        const base = item.id.replace(/-\d+$/, '');
+        productCount[base] = (productCount[base] || 0) + 1;
+      });
+      const detailRows = Object.entries(productCount)
+        .map(([name, cnt]) => `<div class="stat-detail-row"><span>${name}</span><strong>${cnt} 件</strong></div>`)
+        .join('');
+
+      const statsEl = document.getElementById('stats-bar');
+      statsEl.className = 'show';
+      statsEl.innerHTML = `
+        <div class="stat-line"><span>箱型</span><strong>${bin.bin_type}</strong></div>
+        <div class="stat-line"><span>尺寸</span><strong>${L}×${W}×${H} cm</strong></div>
+        <div class="stat-line"><span>利用率</span><strong>${(bin.utilization*100).toFixed(1)}%</strong></div>
+        <div class="stat-line"><span>总重量</span><strong>${bin.total_weight} kg</strong></div>
+        <div class="stat-line"><span>货物数</span><strong>${bin.item_count} 件</strong></div>
+        <div class="stat-detail">
+          <div class="stat-detail-title">产品明细</div>
+          ${detailRows}
+        </div>
+      `;
+
+      // 相机适配
+      const maxD = Math.max(L, W, H);
+      camera.position.set(L / 2 + maxD * 1.5, H / 2 + maxD * 1.2, W / 2 + maxD * 1.5);
+      controls.target.set(L / 2, H / 2, W / 2);
+      controls.update();
+
+      // 控制按钮
+      document.getElementById('btn-play').disabled  = false;
+      document.getElementById('btn-pause').disabled = true;
+      document.getElementById('btn-reset').disabled = false;
+    }
+
+    // ── 计算入口（供外部调用）────────────────────────────────────────────────
+    window._renderResult = function (data) {
+      packingData = data;
+      initThree();
+
+      document.getElementById('empty-state').style.display = 'none';
+
+      // 箱子 Tab
+      const tabsBar = document.getElementById('bin-tabs-bar');
+      tabsBar.className = 'show';
+      tabsBar.innerHTML = '';
+      data.packed_bins.forEach((_, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'vtab' + (i === 0 ? ' active' : '');
+        btn.textContent = `箱子 ${i + 1}`;
+        btn.onclick = () => {
+          document.querySelectorAll('.vtab').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          showBin(i);
+        };
+        tabsBar.appendChild(btn);
+      });
+
+      showBin(0);
+    };
+
+    // ── 速度滑块 ──────────────────────────────────────────────────────────────
+    document.getElementById('speed-slider').addEventListener('input', function () {
+      const v = parseInt(this.value);
+      itemDuration = SPEED_MAP[v];
+      document.getElementById('speed-label').textContent = SPEED_LABEL[v];
+    });
+
+    // 初始速度
+    itemDuration = SPEED_MAP[3];
+    document.getElementById('speed-label').textContent = SPEED_LABEL[3];
+
+    // ── 形状识别 Modal 的独立 Three.js 渲染 ──────────────────────────────────
+    let mScene, mCamera, mRenderer, mControls, mAnimId;
+
+    window._initModalScene = function () {
+      if (mRenderer) return;
+      const canvas = document.getElementById('shape-preview-canvas');
+      const wrap   = document.getElementById('shape-result-canvas-wrap');
+      if (!canvas || !wrap) return;
+      const W = wrap.clientWidth  || 300;
+      const H = wrap.clientHeight || 300;
+      canvas.width  = W * window.devicePixelRatio;
+      canvas.height = H * window.devicePixelRatio;
+
+      mScene = new THREE.Scene();
+      mScene.background = new THREE.Color(0x0d1117);
+
+      mCamera = new THREE.PerspectiveCamera(45, W / H, 0.1, 10000);
+
+      mRenderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+      mRenderer.setPixelRatio(window.devicePixelRatio);
+      mRenderer.setSize(W, H);
+
+      mControls = new OrbitControls(mCamera, canvas);
+      mControls.enableDamping  = true;
+      mControls.dampingFactor  = 0.08;
+      mControls.autoRotate     = true;
+      mControls.autoRotateSpeed = 2.5;
+
+      // 三点布光：半球环境光 + 主光 + 补光 + 轮廓光
+      mScene.add(new THREE.HemisphereLight(0xd4f0ff, 0x0d1117, 0.55));
+      const keyLight = new THREE.DirectionalLight(0xffffff, 1.1);
+      keyLight.position.set(200, 300, 200);
+      mScene.add(keyLight);
+      const fillLight = new THREE.DirectionalLight(0x99bbff, 0.40);
+      fillLight.position.set(-180, 80, -200);
+      mScene.add(fillLight);
+      const rimLight = new THREE.DirectionalLight(0x4ecdc4, 0.28);
+      rimLight.position.set(0, -150, -100);
+      mScene.add(rimLight);
+
+      (function loop() {
+        mAnimId = requestAnimationFrame(loop);
+        mControls.update();
+        mRenderer.render(mScene, mCamera);
+      })();
+    };
+
+    window._destroyModalScene = function () {
+      if (mAnimId) { cancelAnimationFrame(mAnimId); mAnimId = null; }
+      if (mRenderer) { mRenderer.dispose(); mRenderer = null; }
+      mScene = mCamera = mControls = null;
+    };
+
+    window._loadGlbInModal = function (blobUrl) {
+      if (!mScene) return;
+      // 清除旧的 Mesh/Group（保留灯光）
+      const toRemove = [];
+      mScene.traverse(obj => {
+        if (obj.isMesh || (obj.isGroup && obj !== mScene)) toRemove.push(obj);
+      });
+      toRemove.forEach(obj => { if (obj.parent) obj.parent.remove(obj); });
+
+      const loader = new GLTFLoader();
+      loader.load(blobUrl, (gltf) => {
+        const model = gltf.scene;
+        // 计算包围盒，缩放居中
+        const box = new THREE.Box3().setFromObject(model);
+        const size = new THREE.Vector3();
+        box.getSize(size);
+        const maxDim = Math.max(size.x, size.y, size.z) || 1;
+        const scale = 2.0 / maxDim;
+        model.scale.setScalar(scale);
+        const center = new THREE.Vector3();
+        box.getCenter(center);
+        model.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
+        mScene.add(model);
+        mCamera.position.set(0, 0, 3.5);
+        mCamera.lookAt(0, 0, 0);
+        if (mControls) { mControls.target.set(0, 0, 0); mControls.update(); }
+        URL.revokeObjectURL(blobUrl);
+      }, undefined, (err) => {
+        console.error('GLB 加载失败', err);
+      });
+    };
+
+    window._renderShapeInModal = function (shapeType, L, W, H) {
+      if (!mScene) return;
+      mScene.children = mScene.children.filter(
+        c => c instanceof THREE.AmbientLight || c instanceof THREE.DirectionalLight
+      );
+
+      // 地面网格
+      const grid = new THREE.GridHelper(Math.max(L, W) * 2.8, 22, 0x1a2a35, 0x1a2a35);
+      grid.position.y = -H / 2;
+      mScene.add(grid);
+
+      mScene.add(_buildModalShape(shapeType, L, W, H));
+
+      const maxD = Math.max(L, W, H);
+      mCamera.position.set(maxD * 1.9, maxD * 1.4, maxD * 1.9);
+      mCamera.lookAt(0, 0, 0);
+      mControls.target.set(0, 0, 0);
+      mControls.update();
+    };
+
+    function _buildModalShape(shapeType, L, W, H) {
+      const MAIN = 0x4ECDC4;
+      const TRIM = 0x7eddd8;
+
+      // PBR 材质（比 Phong 更真实）
+      const stdMat = (opacity = 0.90) => new THREE.MeshStandardMaterial({
+        color: MAIN, roughness: 0.28, metalness: 0.10,
+        opacity, transparent: opacity < 1,
+      });
+      const trimMat = () => new THREE.MeshStandardMaterial({
+        color: TRIM, roughness: 0.15, metalness: 0.22,
+      });
+      const edgeLn = (op = 0.30) => new THREE.LineBasicMaterial({
+        color: 0xffffff, opacity: op, transparent: true,
+      });
+
+      const group = new THREE.Group();
+
+      // 添加实体 + 边框，pos/rot 为 [x,y,z] 数组
+      function solid(geo, mat, pos, rot) {
+        const m = new THREE.Mesh(geo, mat || stdMat());
+        const e = new THREE.LineSegments(new THREE.EdgesGeometry(geo), edgeLn());
+        if (pos) { m.position.set(...pos); e.position.set(...pos); }
+        if (rot) { m.rotation.set(...rot); e.rotation.set(...rot); }
+        group.add(m); group.add(e);
+        return { m, e };
+      }
+
+      switch (shapeType) {
+
+        case 'cylinder': {
+          const r = Math.max(L, W) / 2;
+          solid(new THREE.CylinderGeometry(r, r, H, 72, 4));
+          // 顶部和底部金属边圈
+          [H / 2, -H / 2].forEach(y => {
+            const ring = new THREE.Mesh(
+              new THREE.TorusGeometry(r, r * 0.028, 10, 72), trimMat()
+            );
+            ring.rotation.x = Math.PI / 2;
+            ring.position.y = y;
+            group.add(ring);
+          });
+          break;
+        }
+
+        case 'sphere': {
+          const r = Math.max(L, W, H) / 2;
+          solid(new THREE.SphereGeometry(r, 72, 56));
+          // 赤道圈
+          const eq = new THREE.Mesh(new THREE.TorusGeometry(r, r * 0.022, 10, 96), trimMat());
+          group.add(eq);
+          // 子午圈（半透明）
+          const mer = new THREE.Mesh(
+            new THREE.TorusGeometry(r, r * 0.015, 8, 96),
+            new THREE.MeshStandardMaterial({ color: TRIM, roughness: 0.2, opacity: 0.55, transparent: true })
+          );
+          mer.rotation.x = Math.PI / 2;
+          group.add(mer);
+          break;
+        }
+
+        case 'cone': {
+          const r = Math.max(L, W) / 2;
+          solid(new THREE.ConeGeometry(r, H, 72, 5));
+          // 底面圆片
+          const cap = new THREE.Mesh(new THREE.CircleGeometry(r, 72), stdMat(0.78));
+          cap.rotation.x = -Math.PI / 2;
+          cap.position.y = -H / 2;
+          group.add(cap);
+          // 底部金属边圈
+          const baseRing = new THREE.Mesh(
+            new THREE.TorusGeometry(r, r * 0.026, 10, 72), trimMat()
+          );
+          baseRing.rotation.x = Math.PI / 2;
+          baseRing.position.y = -H / 2;
+          group.add(baseRing);
+          break;
+        }
+
+        case 'l_shape': {
+          // 横向底板（全宽）
+          const { m: m1, e: e1 } = solid(new THREE.BoxGeometry(L, H * 0.40, W));
+          m1.position.y = -H * 0.30; e1.position.y = m1.position.y;
+          // 纵向侧板（左侧对齐）
+          const vx = -(L / 2 - L * 0.20);
+          const { m: m2, e: e2 } = solid(new THREE.BoxGeometry(L * 0.40, H, W));
+          m2.position.set(vx, H * 0.30, 0); e2.position.copy(m2.position);
+          break;
+        }
+
+        case 'irregular': {
+          const s = Math.min(L, W, H);
+          // 主体（倾斜长方体）
+          solid(new THREE.BoxGeometry(L * 0.88, H * 0.72, W * 0.80), stdMat(0.62),
+            null, [0.12, 0.18, 0.06]);
+          // 球形凸起
+          solid(new THREE.SphereGeometry(s * 0.38, 32, 24), stdMat(0.56),
+            [L * 0.20, H * 0.22, -W * 0.10]);
+          // 圆柱突出物
+          solid(new THREE.CylinderGeometry(s * 0.15, s * 0.20, H * 0.44, 24), stdMat(0.50),
+            [-L * 0.18, -H * 0.10, W * 0.18], [0.35, 0, 0.18]);
+          break;
+        }
+
+        default: { // box
+          solid(new THREE.BoxGeometry(L, H, W));
+          // 内层背面发光
+          group.add(new THREE.Mesh(
+            new THREE.BoxGeometry(L * 0.96, H * 0.96, W * 0.96),
+            new THREE.MeshStandardMaterial({
+              color: 0x7eddd8, opacity: 0.08, transparent: true,
+              side: THREE.BackSide, roughness: 0.95,
+            })
+          ));
+        }
+      }
+      return group;
+    }
+  </script>
+
+  <script>
+    // ── 图片压缩工具（全局可用）────────────────────────────────────────────────
+    function _compressToBase64(file) {
+      return new Promise(resolve => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const MAX = 1024;
+          let w = img.width, h = img.height;
+          if (w > MAX || h > MAX) {
+            if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+            else       { w = Math.round(w * MAX / h); h = MAX; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          let quality = 0.82;
+          let dataUrl;
+          do {
+            dataUrl = canvas.toDataURL('image/jpeg', quality);
+            quality -= 0.08;
+          } while (dataUrl.length * 0.75 > 800 * 1024 && quality > 0.15);
+          resolve(dataUrl.split(',')[1]);
+        };
+        img.src = url;
+      });
+    }
+
+    // ── 货物颜色池 ────────────────────────────────────────────────────────────
+    const COLOR_POOL = [
+      '#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FECA57',
+      '#FF9FF3','#54A0FF','#A29BFE','#00D2D3','#FF9F43',
+    ];
+    let itemCounter = 0;
+
+    // ── 添加货物行 ────────────────────────────────────────────────────────────
+    function addItem(name='', length='', width='', height='', weight='', qty=1, salePrice='', category='常规类产品', softOk=false) {
+      const container = document.getElementById('items-container');
+      const color = COLOR_POOL[itemCounter % COLOR_POOL.length];
+      const id    = 'item-' + itemCounter++;
+
+      const catOpts = ['常规类产品','服装产品','危险品'].map(c =>
+        `<option value="${c}" ${c === category ? 'selected' : ''}>${c === '常规类产品' ? '常规' : c === '服装产品' ? '服装' : '危险品'}</option>`
+      ).join('');
+
+      const row = document.createElement('div');
+      row.className = 'item-row';
+      row.id = id;
+      row.innerHTML = `
+        <div class="item-row-header">
+          <div class="color-dot" style="background:${color}"></div>
+          <input class="item-name-input" placeholder="货物名称" value="${name}" />
+          <button class="camera-btn" onclick="openRecognizer('${id}')" title="拍照识别尺寸">📷</button>
+          <button class="delete-btn" onclick="removeItem('${id}')">×</button>
+        </div>
+        <div class="item-fields">
+          <div class="field-group">
+            <div class="field-label">长(cm)</div>
+            <input class="field-input item-length" type="number" min="1" value="${length}" placeholder="长" />
+          </div>
+          <div class="field-group">
+            <div class="field-label">宽(cm)</div>
+            <input class="field-input item-width" type="number" min="1" value="${width}" placeholder="宽" />
+          </div>
+          <div class="field-group">
+            <div class="field-label">高(cm)</div>
+            <input class="field-input item-height" type="number" min="1" value="${height}" placeholder="高" />
+          </div>
+          <div class="field-group">
+            <div class="field-label">重(kg)</div>
+            <input class="field-input item-weight" type="number" min="0" step="0.1" value="${weight}" placeholder="重量" />
+          </div>
+          <div class="field-group">
+            <div class="field-label">数量</div>
+            <input class="field-input item-qty" type="number" min="1" value="${qty}" placeholder="1" />
+          </div>
+          <div class="field-group">
+            <div class="field-label">售价($)</div>
+            <input class="field-input item-sale-price" type="number" min="0" step="0.01" value="${salePrice}" placeholder="USD" />
+          </div>
+          <div class="field-group" style="flex:1.4">
+            <div class="field-label">产品类别</div>
+            <select class="field-input item-category" style="cursor:pointer">${catOpts}</select>
+          </div>
+        </div>
+        <div style="margin-top:6px;display:flex;align-items:center;gap:6px">
+          <input type="checkbox" class="item-soft-ok" id="${id}-soft" ${softOk ? 'checked' : ''} style="cursor:pointer;accent-color:#58a6ff" />
+          <label for="${id}-soft" style="font-size:11px;color:#8b949e;cursor:pointer">允许软包材（如多层袋）</label>
+        </div>
+      `;
+      container.appendChild(row);
+    }
+
+    function removeItem(id) {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    }
+
+    // ── 加载示例数据 ──────────────────────────────────────────────────────────
+    function loadDemo() {
+      document.getElementById('items-container').innerHTML = '';
+      itemCounter = 0;
+      const demos = [
+        ['显示器', 55, 35, 15, 4.5],
+        ['键盘',   45, 15,  5, 0.8],
+        ['鼠标',   12,  8,  4, 0.2],
+        ['耳机',   20, 18, 10, 0.3],
+        ['充电器', 10,  6,  4, 0.2],
+      ];
+      demos.forEach(d => addItem(...d));
+
+      switchBinMode('preset');
+      document.getElementById('custom-bins-container').innerHTML = '';
+      customBinCounter = 0;
+      addCustomBin('示例箱', 60, 50, 50, 30);
+    }
+
+    // ── 包材库搜索 ────────────────────────────────────────────────────────────
+    let currentBinMode     = 'preset';
+    let customBinCounter   = 0;
+    let selectedCatalogBins = [];   // 用户从包材库手动选入的包材
+    let _catalogSearchTimer = null;
+
+    function switchBinMode(mode) {
+      currentBinMode = mode;
+      document.getElementById('bin-mode-preset').classList.toggle('active', mode === 'preset');
+      document.getElementById('bin-mode-custom').classList.toggle('active', mode === 'custom');
+      document.getElementById('bin-preset-wrap').style.display = mode === 'preset' ? 'block' : 'none';
+      document.getElementById('bin-custom-wrap').style.display = mode === 'custom' ? 'block' : 'none';
+      if (mode === 'custom' && !document.querySelector('.custom-bin-row')) addCustomBin();
+    }
+
+    function debouncedCatalogSearch() {
+      clearTimeout(_catalogSearchTimer);
+      _catalogSearchTimer = setTimeout(onCatalogSearch, 280);
+    }
+
+    async function onCatalogSearch() {
+      const q    = document.getElementById('catalog-q').value.trim();
+      const type = document.getElementById('catalog-type').value;
+      const el   = document.getElementById('catalog-results');
+      if (!q && !type) { el.style.display = 'none'; return; }
+      try {
+        const res  = await fetch(`/api/bins-catalog?q=${encodeURIComponent(q)}&type=${encodeURIComponent(type)}&page_size=20`);
+        const data = await res.json();
+        const items = data.items || [];
+        if (!items.length) {
+          el.innerHTML = '<div style="padding:8px 10px;color:#6e7681;font-size:12px">无匹配结果</div>';
+        } else {
+          el.innerHTML = items.map(c => {
+            const displayName = (c.mat_name || '').trim() || c.name || c.sku || '';
+            const maxW = c.max_weight ?? 22;
+            const price = c.price ? ` · ¥${parseFloat(c.price).toFixed(2)}` : '';
+            const bin = { sku: c.sku||'', name: displayName, type: c.type||'',
+                          length: +c.length, width: +c.width, height: +c.height,
+                          max_weight: +maxW, cost_price: +(c.price||0) };
+            return `<div class="catalog-result-item" onclick='pickCatalogBin(${JSON.stringify(bin)})'>
+              <div>
+                <div class="catalog-result-name">${displayName}</div>
+                <div class="catalog-result-meta">${c.length}×${c.width}×${c.height} cm · 限重 ${maxW} kg${price}</div>
+              </div>
+              <div class="catalog-result-sku">${c.sku || ''}</div>
+            </div>`;
+          }).join('');
+        }
+        el.style.display = 'block';
+      } catch(e) { el.style.display = 'none'; }
+    }
+
+    function pickCatalogBin(b) {
+      const key = b.sku || (b.name + b.length + b.width + b.height);
+      if (!selectedCatalogBins.find(x => (x.sku || (x.name+x.length+x.width+x.height)) === key)) {
+        selectedCatalogBins.push(b);
+        renderCatalogChips();
+      }
+      document.getElementById('catalog-results').style.display = 'none';
+      document.getElementById('catalog-q').value = '';
+    }
+
+    function removeCatalogBin(idx) {
+      selectedCatalogBins.splice(idx, 1);
+      renderCatalogChips();
+    }
+
+    function renderCatalogChips() {
+      const chips = document.getElementById('catalog-chips');
+      const hint  = document.getElementById('catalog-hint');
+      if (!selectedCatalogBins.length) {
+        chips.innerHTML = '';
+        hint.style.display = 'block';
+        return;
+      }
+      hint.style.display = 'none';
+      chips.innerHTML = selectedCatalogBins.map((b, i) => `
+        <div class="catalog-chip">
+          <span>${b.name} ${b.length}×${b.width}×${b.height}</span>
+          <span class="catalog-chip-remove" onclick="removeCatalogBin(${i})">×</span>
+        </div>`).join('');
+    }
+
+    // 点击搜索框以外时收起结果列表
+    document.addEventListener('click', e => {
+      if (!e.target.closest('#bin-preset-wrap')) {
+        const el = document.getElementById('catalog-results');
+        if (el) el.style.display = 'none';
+      }
+    });
+
+    function addCustomBin(name='', length='', width='', height='', weight='') {
+      const container = document.getElementById('custom-bins-container');
+      const id = 'cbin-' + customBinCounter++;
+      const row = document.createElement('div');
+      row.className = 'custom-bin-row';
+      row.id = id;
+      row.innerHTML = `
+        <div class="custom-bin-row-header">
+          <input class="custom-bin-name-input" placeholder="箱型名称（选填）" value="${name}" />
+          <button class="delete-btn" onclick="removeCustomBin('${id}')">×</button>
+        </div>
+        <div class="bin-fields">
+          <div class="field-group">
+            <div class="field-label">长(cm)</div>
+            <input class="field-input custom-bin-length" type="number" min="1" value="${length}" placeholder="长" />
+          </div>
+          <div class="field-group">
+            <div class="field-label">宽(cm)</div>
+            <input class="field-input custom-bin-width" type="number" min="1" value="${width}" placeholder="宽" />
+          </div>
+          <div class="field-group">
+            <div class="field-label">高(cm)</div>
+            <input class="field-input custom-bin-height" type="number" min="1" value="${height}" placeholder="高" />
+          </div>
+          <div class="field-group">
+            <div class="field-label">限重(kg)</div>
+            <input class="field-input custom-bin-weight" type="number" min="1" value="${weight}" placeholder="限重" />
+          </div>
+        </div>
+      `;
+      container.appendChild(row);
+    }
+
+    function removeCustomBin(id) {
+      const el = document.getElementById(id);
+      if (el) el.remove();
+    }
+
+    // ── AI 模式切换 ───────────────────────────────────────────────────────────
+    function toggleAIMode(enabled) {
+      const binTitle = document.getElementById('bin-section-title');
+      if (enabled) {
+        binTitle.textContent = '箱型设置（自定义时 AI 优先使用，否则自动从预设中选）';
+      } else {
+        binTitle.textContent = '箱型设置';
+      }
+    }
+
+    // ── 收集表单数据并调用 API ────────────────────────────────────────────────
+    async function calculate() {
+      const rows = document.querySelectorAll('.item-row');
+      const items = [];
+
+      for (const row of rows) {
+        const name      = row.querySelector('.item-name-input').value.trim() || ('货物' + (items.length + 1));
+        const length    = parseFloat(row.querySelector('.item-length').value);
+        const width     = parseFloat(row.querySelector('.item-width').value);
+        const height    = parseFloat(row.querySelector('.item-height').value);
+        const weight    = parseFloat(row.querySelector('.item-weight').value);
+        const qty       = parseInt(row.querySelector('.item-qty').value) || 1;
+        const salePriceEl = row.querySelector('.item-sale-price');
+        const sale_price  = salePriceEl ? (parseFloat(salePriceEl.value) || 0) : 0;
+        const catEl = row.querySelector('.item-category');
+        const product_category = catEl ? catEl.value : '常规类产品';
+        const softOkEl = row.querySelector('.item-soft-ok');
+        const soft_packaging_ok = softOkEl ? softOkEl.checked : false;
+
+        if (!length || !width || !height || !weight) {
+          showError('请填写所有货物的尺寸和重量');
+          return;
+        }
+
+        for (let q = 0; q < qty; q++) {
+          items.push({
+            id:     qty > 1 ? `${name}-${q + 1}` : name,
+            length, width, height, weight, sale_price, product_category, soft_packaging_ok,
+          });
+        }
+      }
+
+      if (!items.length) {
+        showError('请至少添加一件货物');
+        return;
+      }
+
+      let bins;
+      if (currentBinMode === 'preset') {
+        // 包材库模式：将用户手动选入的包材转为 bins 格式
+        bins = selectedCatalogBins.map(b => ({
+          type: b.name + (b.sku ? ` (${b.sku})` : ''),
+          length: b.length, width: b.width, height: b.height, max_weight: b.max_weight,
+        }));
+        // 非 AI 模式下必须至少选一种包材
+        const aiMode0 = document.getElementById('ai-mode-toggle').checked;
+        if (!aiMode0 && bins.length === 0) {
+          showError('请先从包材库中选择至少一种包材，或切换至「自定义尺寸」手动填写');
+          return;
+        }
+      } else {
+        bins = [];
+        const rows = document.querySelectorAll('.custom-bin-row');
+        if (!rows.length) { showError('请至少添加一个箱型'); return; }
+        for (const row of rows) {
+          const name   = row.querySelector('.custom-bin-name-input').value.trim() || '自定义箱';
+          const length = parseFloat(row.querySelector('.custom-bin-length').value);
+          const width  = parseFloat(row.querySelector('.custom-bin-width').value);
+          const height = parseFloat(row.querySelector('.custom-bin-height').value);
+          const weight = parseFloat(row.querySelector('.custom-bin-weight').value);
+          if (!length || !width || !height || !weight) {
+            showError(`箱型「${name}」请填写完整的尺寸和限重`);
+            return;
+          }
+          bins.push({ type: name, length, width, height, max_weight: weight });
+        }
+      }
+
+      hideError();
+      showLoading(true);
+      document.getElementById('calc-btn').disabled = true;
+      document.getElementById('ai-summary').className = '';
+      document.getElementById('compare-panel').className = '';
+
+      // 保存货物原始信息，供3D悬停提示使用
+      window._itemMeta = {};
+      items.forEach(item => { window._itemMeta[item.id] = item; });
+
+      const aiMode = document.getElementById('ai-mode-toggle').checked;
+
+      try {
+        let res, data;
+
+        if (aiMode) {
+          // AI Agent 模式：
+          // - 自定义模式：将用户填写的箱型传入
+          // - 包材库模式：若用户手动选了包材则传入，否则传 null 让后端全量扫描目录
+          const agentBins = currentBinMode === 'custom'
+            ? (bins.length > 0 ? bins : null)
+            : (selectedCatalogBins.length > 0 ? bins : null);
+          res  = await fetch('/api/agent-pack', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items, bins: agentBins }),
+          });
+          data = await res.json();
+
+          // agent-pack 返回结构不同，取 final_result 作为装箱数据
+          if (data.success) {
+            // AI 分析说明
+            if (data.agent_summary) {
+              const aiUsed = !!data.ai_used;
+              const elTitle = document.getElementById('ai-summary-title');
+              const elBadge = document.getElementById('ai-summary-badge');
+              const elText  = document.getElementById('ai-summary-text');
+              if (elTitle) elTitle.textContent = aiUsed ? 'AI 分析说明' : '算法计算结果';
+              if (elBadge) elBadge.textContent = aiUsed ? 'AI 驱动' : '本地模式';
+              if (elText)  elText.textContent  = data.agent_summary;
+              document.getElementById('ai-summary').className = 'show ' + (aiUsed ? 'ai' : 'local');
+              // 降级原因：显示 ai_error 方便排查
+              const elErr = document.getElementById('ai-error-tip');
+              if (elErr) {
+                if (!aiUsed && data.ai_error) {
+                  elErr.textContent = '降级原因：' + data.ai_error;
+                  elErr.style.display = '';
+                } else {
+                  elErr.style.display = 'none';
+                }
+              }
+            }
+
+            // 新包材对比面板
+            if (data.compare_result) {
+              window._compareResult = data.compare_result;
+              showComparePanel(data.compare_result);
+            }
+
+            // 优先用 final_result，否则尝试 compare_result 中的推荐包材结果
+            if (data.final_result && data.final_result.packed_bins && data.final_result.packed_bins.length) {
+              data = data.final_result;
+            } else if (data.compare_result && data.compare_result.recommended_result &&
+                       data.compare_result.recommended_result.packed_bins &&
+                       data.compare_result.recommended_result.packed_bins.length) {
+              data = data.compare_result.recommended_result;
+            } else {
+              showError('AI未能生成有效装箱方案，请检查货物信息或重试');
+              return;
+            }
+          } else {
+            showError('AI计算失败：' + (data.error || '未知错误'));
+            return;
+          }
+        } else {
+          // 普通模式：用户指定箱型，调用 /api/pack
+          res  = await fetch('/api/pack', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              items,
+              bins,
+            }),
+          });
+          data = await res.json();
+        }
+
+        if (!res.ok) {
+          showError('计算失败：' + (data.detail || res.status));
+          return;
+        }
+
+        if (!data.packed_bins || !data.packed_bins.length) {
+          showError('所有货物均无法装入该箱型，请调整箱型尺寸或货物数量');
+          return;
+        }
+
+        if (data.unplaced_items && data.unplaced_items.length) {
+          showError(`注意：${data.unplaced_items.join('、')} 无法放入，已跳过`);
+        }
+
+        window._renderResult(data);
+
+      } catch (e) {
+        console.error('[calculate error]', e);
+        showError('错误：' + (e && e.message ? e.message : String(e)));
+      } finally {
+        showLoading(false);
+        document.getElementById('calc-btn').disabled = false;
+      }
+    }
+
+    function _feeBlock(feeObj, label) {
+      if (!feeObj) return '';
+      const tier       = feeObj.tier        || '';
+      const total      = (feeObj.total_fee  || 0).toFixed(2);
+      const shipping   = (feeObj.shipping_fee  || 0).toFixed(2);
+      const packaging  = (feeObj.packaging_fee || 0).toFixed(2);
+      const surcharge  = (feeObj.surcharge     || 0).toFixed(2);
+      const billable   = feeObj.billable_weight_g != null
+                         ? `${Math.round(feeObj.billable_weight_g)}g` : '';
+      return `
+        <div class="compare-col-sub fee-block">
+          <span class="fee-tier-badge">${tier}</span>
+          ${billable ? `<span style="color:#8b949e;font-size:10px">计费重${billable}</span>` : ''}
+          <br>
+          <span style="color:#f0883e;font-weight:600">总FBA费 $${total}</span>
+          <span style="color:#8b949e;font-size:10px">
+            （FBA$${shipping}+包$${packaging}+附$${surcharge}）
+          </span>
+        </div>`;
+    }
+
+    function showComparePanel(cmp) {
+      const s    = cmp.compare_summary;
+      const rec  = s.recommended_result;
+      const best = s.best_existing_result;
+      const rb   = s.recommended_bin;
+      const sb   = s.soft_bin;
+      const sr   = s.soft_result;
+
+      const hasRec  = cmp.recommended_result  && cmp.recommended_result.packed_bins  && cmp.recommended_result.packed_bins.length;
+      const hasBest = cmp.best_full_result     && cmp.best_full_result.packed_bins    && cmp.best_full_result.packed_bins.length;
+      const hasSoft = cmp.soft_full_result     && cmp.soft_full_result.packed_bins    && cmp.soft_full_result.packed_bins.length;
+
+      const tierUpgrade = s.tier_upgrade;
+      const tierTip = tierUpgrade
+        ? `<div style="text-align:center;color:#f0883e;font-size:12px;margin-top:6px">
+             ⚡ FBA费档级降低：${(s.existing_fee||{}).tier||''} → ${(s.recommended_fee||{}).tier||''}，强制推荐新包材
+           </div>` : '';
+
+      const panel = document.getElementById('compare-panel');
+      panel.className = 'show';
+
+      if (!rb && !sb) {
+        // 现有箱型已足够好，无需推荐
+        const ef = s.existing_fee;
+        const cpLine = s.best_existing_cost_price != null
+          ? `<div class="compare-col-sub" style="color:#f0883e">成本价 ¥${s.best_existing_cost_price.toFixed(2)}</div>` : '';
+        const skuLine = s.best_existing_sku
+          ? `<div class="compare-col-sub" style="opacity:0.6">SKU: ${s.best_existing_sku}</div>` : '';
+        panel.innerHTML = `
+          <div class="compare-title">📦 包材分析</div>
+          <div style="text-align:center;padding:12px 0">
+            <div style="color:#3fb950;font-size:14px;font-weight:600">已从包材库匹配最优包材</div>
+            <div class="compare-col-sub" style="margin-top:6px">${s.best_existing_bin}</div>
+            ${cpLine}${skuLine}
+            <div class="compare-col-sub">利用率 ${(best.utilization*100).toFixed(1)}%</div>
+            ${_feeBlock(ef, '现有箱型')}
+          </div>`;
+        return;
+      }
+
+      // 构建对比列 HTML
+      const recCol = rb ? `
+          <div class="compare-col">
+            <div class="compare-col-title">推荐新包材（硬箱）</div>
+            <div class="compare-col-val">${rb.length}×${rb.width}×${rb.height}</div>
+            <div class="compare-col-sub">限重 ${rb.max_weight}kg</div>
+            <div class="compare-col-sub" style="color:${rec.all_placed?'#3fb950':'#f85149'}">
+              ${rec.all_placed?'全部装入':'有未装入'} · ${rec.total_bins_used ?? 1} 箱
+            </div>
+            <div class="compare-col-sub">利用率 ${(rec.utilization*100).toFixed(1)}%</div>
+            ${_feeBlock(s.recommended_fee, '推荐新包材')}
+          </div>` : '';
+
+      const softCol = (sb && sr) ? `
+          <div class="compare-col">
+            <div class="compare-col-title">软包材方案</div>
+            <div class="compare-col-val">${sb.length}×${sb.width}×${sb.height}</div>
+            <div class="compare-col-sub">限重 ${sb.max_weight}kg</div>
+            <div class="compare-col-sub" style="color:#3fb950">全部装入 · 1 袋</div>
+            <div class="compare-col-sub">利用率 ${(sr.utilization*100).toFixed(1)}%</div>
+            ${_feeBlock(s.soft_fee, '软包材')}
+          </div>` : '';
+
+      const _bestCpLine = s.best_existing_cost_price != null
+        ? `<div class="compare-col-sub" style="color:#f0883e">成本价 ¥${s.best_existing_cost_price.toFixed(2)}</div>` : '';
+      const _bestSkuLine = s.best_existing_sku
+        ? `<div class="compare-col-sub" style="opacity:0.6">SKU: ${s.best_existing_sku}</div>` : '';
+      const bestCol = `
+          <div class="compare-col">
+            <div class="compare-col-title">包材库最优箱型</div>
+            <div class="compare-col-val">${s.best_existing_bin}</div>
+            ${_bestCpLine}${_bestSkuLine}
+            <div class="compare-col-sub" style="color:${best.all_placed?'#3fb950':'#f85149'}">
+              ${best.all_placed?'全部装入':'有未装入'} · ${best.total_bins_used ?? 1} 箱
+            </div>
+            <div class="compare-col-sub">利用率 ${(best.utilization*100).toFixed(1)}%</div>
+            ${_feeBlock(s.existing_fee, '现有箱型')}
+          </div>`;
+
+      // 组装对比行（有软包材时三列，否则两列）
+      let compareRowInner = '';
+      if (rb && sb) {
+        compareRowInner = recCol + '<div class="compare-divider">vs</div>' + softCol + '<div class="compare-divider">vs</div>' + bestCol;
+      } else if (rb) {
+        compareRowInner = recCol + '<div class="compare-divider">vs</div>' + bestCol;
+      } else {
+        compareRowInner = softCol + '<div class="compare-divider">vs</div>' + bestCol;
+      }
+
+      // 默认激活：优先激活 winner 对应的演示按钮
+      const winnerType = s.winner === '软包材' ? 'soft' : (s.winner !== s.best_existing_bin ? 'rec' : 'best');
+      const recBtn  = rb   ? `<button class="compare-view-btn ${winnerType==='rec'?'active':''}" id="btn-view-rec"
+            onclick="switchCompareView('rec')"
+            ${hasRec ? '' : 'disabled style="opacity:0.4;cursor:not-allowed"'}>
+            ▶ 推荐方案演示
+          </button>` : '';
+      const softBtn = sb   ? `<button class="compare-view-btn ${winnerType==='soft'?'active':''}" id="btn-view-soft"
+            onclick="switchCompareView('soft')"
+            ${hasSoft ? '' : 'disabled style="opacity:0.4;cursor:not-allowed"'}>
+            ▶ 软包材演示
+          </button>` : '';
+      const bestBtn = `<button class="compare-view-btn ${winnerType==='best'?'active':''}" id="btn-view-best"
+            onclick="switchCompareView('best')"
+            ${hasBest ? '' : 'disabled style="opacity:0.4;cursor:not-allowed"'}>
+            ▶ 现有方案演示
+          </button>`;
+
+      panel.innerHTML = `
+        <div class="compare-title">📦 包材对比分析</div>
+        <div class="compare-row">${compareRowInner}</div>
+        ${tierTip}
+        <div style="text-align:center;margin-top:8px">
+          推荐使用：<span class="winner-badge">${s.winner}</span>
+        </div>
+        <div class="compare-actions">
+          ${recBtn}${softBtn}${bestBtn}
+        </div>
+      `;
+    }
+
+    window.switchCompareView = function(type) {
+      const cmp = window._compareResult;
+      if (!cmp) return;
+
+      const recBtn  = document.getElementById('btn-view-rec');
+      const bestBtn = document.getElementById('btn-view-best');
+      const softBtn = document.getElementById('btn-view-soft');
+
+      // 清除所有激活状态
+      [recBtn, bestBtn, softBtn].forEach(b => b && b.classList.remove('active'));
+
+      if (type === 'rec') {
+        const result = cmp.recommended_result;
+        if (!result || !result.packed_bins || !result.packed_bins.length) return;
+        window._renderResult(result);
+        recBtn && recBtn.classList.add('active');
+      } else if (type === 'soft') {
+        const result = cmp.soft_full_result;
+        if (!result || !result.packed_bins || !result.packed_bins.length) return;
+        window._renderResult(result);
+        softBtn && softBtn.classList.add('active');
+      } else {
+        const result = cmp.best_full_result;
+        if (!result || !result.packed_bins || !result.packed_bins.length) return;
+        window._renderResult(result);
+        bestBtn && bestBtn.classList.add('active');
+      }
+    };
+
+    // ── 包材库 Modal ──────────────────────────────────────────────────────────
+    let _catalogPage = 1;
+    const _catalogPageSize = 30;
+
+    function openCatalogModal() {
+      document.getElementById('catalog-modal').classList.add('show');
+      document.getElementById('catalog-search').value = '';
+      document.getElementById('catalog-type-select').value = '';
+      _catalogPage = 1;
+      _loadCatalog();
+    }
+
+    function closeCatalogModal() {
+      document.getElementById('catalog-modal').classList.remove('show');
+    }
+
+    function catalogSearch() {
+      _catalogPage = 1;
+      _loadCatalog();
+    }
+
+    function catalogChangePage(delta) {
+      _catalogPage = Math.max(1, _catalogPage + delta);
+      _loadCatalog();
+    }
+
+    async function _loadCatalog() {
+      const q    = encodeURIComponent(document.getElementById('catalog-search').value.trim());
+      const type = encodeURIComponent(document.getElementById('catalog-type-select').value);
+      const url  = `/api/bins-catalog?q=${q}&type=${type}&page=${_catalogPage}&page_size=${_catalogPageSize}`;
+      const res  = await fetch(url);
+      const data = await res.json();
+
+      const totalPages = Math.max(1, Math.ceil(data.total / _catalogPageSize));
+      document.getElementById('catalog-total-tip').textContent = `共 ${data.total} 条`;
+      document.getElementById('catalog-page-tip').textContent  = `${_catalogPage} / ${totalPages}`;
+      document.getElementById('catalog-prev').disabled = _catalogPage <= 1;
+      document.getElementById('catalog-next').disabled = _catalogPage >= totalPages;
+
+      const list = document.getElementById('catalog-list');
+      if (!data.items.length) {
+        list.innerHTML = '<div style="padding:24px;text-align:center;color:#484f58;font-size:13px">未找到匹配包材</div>';
+        return;
+      }
+      list.innerHTML = data.items.map(item => {
+        const isHard   = item.type === '硬包材';
+        const typeClass = isHard ? 'hard' : 'soft';
+        const typeLabel = isHard ? '硬' : '软';
+        const dims = `${item.length}×${item.width}×${item.height} cm · 限重 ${item.max_weight}kg`;
+        return `<div class="catalog-item" onclick="addBinFromCatalog(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+          <span class="catalog-item-type ${typeClass}">${typeLabel}</span>
+          <div class="catalog-item-info">
+            <div class="catalog-item-name" title="${item.name}">${item.name}</div>
+            <div class="catalog-item-dims">${dims}${item.sku ? ' · ' + item.sku : ''}</div>
+          </div>
+          <span class="catalog-item-price">¥${item.price}</span>
+        </div>`;
+      }).join('');
+    }
+
+    function addBinFromCatalog(item) {
+      // 软包材目前系统用 soft_packing_engine，不走自定义箱型路径；统一以硬箱加入供参考
+      const name = item.mat_name || item.name.split('，')[0].slice(0, 12);
+      switchBinMode('custom');
+      addCustomBin(name, item.length, item.width, item.height, item.max_weight);
+      closeCatalogModal();
+    }
+
+    function showLoading(show) {
+      document.getElementById('loading-mask').className = show ? 'show' : '';
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('error-bar');
+      el.textContent = msg;
+      el.className = 'show';
+      if (!msg.startsWith('错误：')) setTimeout(() => el.className = '', 5000);
+    }
+
+    function hideError() {
+      document.getElementById('error-bar').className = '';
+    }
+
+    // ── 图片识别功能（3角度拍摄）────────────────────────────────────────────────
+    let _recognizeRowId = null;
+    let _currentView    = null;
+    const _photos       = { front: null, side: null, top: null };
+
+    function openRecognizer(rowId) {
+      _recognizeRowId = rowId;
+      _photos.front = _photos.side = _photos.top = null;
+      _updateAllSlots();
+      document.getElementById('shape-capture-phase').style.display = '';
+      document.getElementById('shape-result-phase').style.display  = 'none';
+      document.getElementById('shape-modal').classList.add('show');
+    }
+
+    function captureView(view) {
+      _currentView = view;
+      const input = document.getElementById('shape-photo-input');
+      input.value = '';
+      input.click();
+    }
+
+    document.getElementById('shape-photo-input').addEventListener('change', function () {
+      const file = this.files[0];
+      if (!file || !_currentView) return;
+      _photos[_currentView] = { file, objUrl: URL.createObjectURL(file) };
+      _updateAllSlots();
+    });
+
+    function _updateAllSlots() {
+      ['front', 'side', 'top'].forEach(view => {
+        const slot  = document.getElementById('slot-' + view);
+        if (!slot) return;
+        const ph    = _photos[view];
+        const thumb = slot.querySelector('.slot-thumb');
+        const icon  = slot.querySelector('.slot-icon');
+        const hint  = slot.querySelector('.slot-hint');
+        let check   = slot.querySelector('.slot-check');
+
+        if (ph) {
+          thumb.src           = ph.objUrl;
+          thumb.style.display = 'block';
+          icon.style.display  = 'none';
+          hint.style.display  = 'none';
+          slot.classList.add('captured');
+          if (!check) {
+            check = document.createElement('div');
+            check.className   = 'slot-check';
+            check.textContent = '✓';
+            slot.appendChild(check);
+          }
+        } else {
+          thumb.style.display = 'none';
+          icon.style.display  = '';
+          hint.style.display  = '';
+          slot.classList.remove('captured');
+          if (check) check.remove();
+        }
+      });
+      const hasAny = _photos.front || _photos.side || _photos.top;
+      document.getElementById('btn-start-recognition').disabled = !hasAny;
+    }
+
+    async function startRecognition() {
+      const captured = [['front','正面'],['side','侧面'],['top','顶面']]
+        .filter(([v]) => _photos[v])
+        .map(([v, label]) => ({ view: v, label, file: _photos[v].file, objUrl: _photos[v].objUrl }));
+      if (!captured.length) return;
+
+      document.getElementById('shape-capture-phase').style.display = 'none';
+      document.getElementById('shape-result-phase').style.display  = '';
+
+      document.getElementById('shape-thumb-row').innerHTML = captured.map(c => `
+        <div class="thumb-item">
+          <img src="${c.objUrl}" alt="${c.label}" />
+          <div class="thumb-item-label">${c.label}</div>
+        </div>
+      `).join('');
+
+      document.getElementById('shape-preview-loading').classList.add('show');
+      document.getElementById('shape-type-text').textContent = '识别中...';
+      document.getElementById('shape-note-text').textContent = '';
+      document.getElementById('shape-confidence-fill').style.width = '0%';
+      document.getElementById('shape-confidence-text').textContent = '—';
+      ['shape-dim-l','shape-dim-w','shape-dim-h'].forEach(id => {
+        const el = document.getElementById(id);
+        el.value = ''; el.style.borderColor = '';
+      });
+
+      setTimeout(() => { if (window._initModalScene) window._initModalScene(); }, 80);
+
+      const images = await Promise.all(captured.map(async c => ({
+        image_base64: await _compressToBase64(c.file),
+        media_type:   'image/jpeg',
+        view:         c.label,
+      })));
+
+      try {
+        const res  = await fetch('/api/recognize-shape', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ images }),
+        });
+        const data = await res.json();
+        document.getElementById('shape-preview-loading').classList.remove('show');
+        if (data.success) {
+          // 确保场景已初始化再渲染
+          if (window._initModalScene) window._initModalScene();
+          _fillShapeModal(data);
+        } else {
+          closeShapeModal();
+          showError('识别失败：' + (data.detail || '请重试'));
+        }
+      } catch (err) {
+        closeShapeModal();
+        showError('识别请求失败，请确认服务是否正在运行');
+      }
+    }
+
+    const SHAPE_NAMES = {
+      box: '长方体', cylinder: '圆柱体', sphere: '球体',
+      cone: '锥形', l_shape: 'L 形', irregular: '不规则形',
+    };
+
+    function _fillShapeModal(data) {
+      document.getElementById('shape-type-text').textContent = SHAPE_NAMES[data.shape_type] || data.shape_type;
+      document.getElementById('shape-note-text').textContent = data.shape_note || '';
+      const pct = Math.round((data.confidence || 0) * 100);
+      document.getElementById('shape-confidence-fill').style.width = pct + '%';
+      document.getElementById('shape-confidence-text').textContent  = pct + '%';
+      document.getElementById('shape-dim-l').value = data.length || '';
+      document.getElementById('shape-dim-w').value = data.width  || '';
+      document.getElementById('shape-dim-h').value = data.height || '';
+      const st = data.shape_type || 'box';
+      document.getElementById('shape-modal').dataset.shapeType = st;
+      if (window._renderShapeInModal) {
+        window._renderShapeInModal(st, data.length || 10, data.width || 10, data.height || 10);
+      }
+    }
+
+    function closeShapeModal() {
+      document.getElementById('shape-modal').classList.remove('show');
+      if (window._destroyModalScene) window._destroyModalScene();
+    }
+
+    function retakePhoto() {
+      document.getElementById('shape-result-phase').style.display  = 'none';
+      document.getElementById('shape-capture-phase').style.display = '';
+      if (window._destroyModalScene) window._destroyModalScene();
+    }
+
+    async function generateTripo3D() {
+      const photo = _photos.front || _photos.side || _photos.top;
+      if (!photo) { alert('请先拍摄至少一张照片'); return; }
+
+      const apiKey = document.getElementById('tripo-api-key').value.trim();
+      if (!apiKey) { alert('请输入 Tripo3D API Key'); return; }
+
+      const btn    = document.getElementById('btn-gen-tripo');
+      const status = document.getElementById('gen-3d-status');
+      btn.disabled = true;
+      document.getElementById('btn-gen-3d').disabled = true;
+      status.textContent = '上传图片中...';
+
+      try {
+        const b64 = await _compressToBase64(photo.file);
+        status.textContent = '生成3D模型中（约20-60秒）...';
+
+        const resp = await fetch('/api/tripo3d/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_base64: b64, media_type: 'image/jpeg', api_key: apiKey }),
+        });
+        if (!resp.ok) {
+          const err = await resp.json();
+          throw new Error(err.detail || resp.statusText);
+        }
+        const data = await resp.json();
+        if (!data.success) throw new Error('生成失败');
+
+        status.textContent = '加载3D模型中...';
+        const glbBytes = Uint8Array.from(atob(data.glb_base64), c => c.charCodeAt(0));
+        const blob     = new Blob([glbBytes], { type: 'model/gltf-binary' });
+        _loadGlbInModal(URL.createObjectURL(blob));
+        status.textContent = '✓ Tripo3D 精细模型已加载';
+      } catch (e) {
+        status.textContent = '生成失败: ' + e.message;
+        console.error(e);
+      } finally {
+        btn.disabled = false;
+        document.getElementById('btn-gen-3d').disabled = false;
+      }
+    }
+
+    async function generateTripoSR() {
+      // 取正面图（优先）或第一张有效图
+      const photo = _photos.front || _photos.side || _photos.top;
+      if (!photo) { alert('请先拍摄至少一张照片'); return; }
+
+      const btn    = document.getElementById('btn-gen-3d');
+      const status = document.getElementById('gen-3d-status');
+      btn.disabled = true;
+      status.textContent = '生成中，首次需加载模型约1分钟...';
+
+      try {
+        const b64 = await _compressToBase64(photo.file);
+        const resp = await fetch('/api/generate-3d', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image_base64: b64, media_type: 'image/jpeg' }),
+        });
+        if (!resp.ok) {
+          const err = await resp.json();
+          throw new Error(err.detail || resp.statusText);
+        }
+        const data = await resp.json();
+        if (!data.success) throw new Error('生成失败');
+
+        status.textContent = '加载3D模型中...';
+
+        // 将 GLB base64 转成 Blob URL
+        const glbBytes   = Uint8Array.from(atob(data.glb_base64), c => c.charCodeAt(0));
+        const blob       = new Blob([glbBytes], { type: 'model/gltf-binary' });
+        const blobUrl    = URL.createObjectURL(blob);
+
+        // 替换 canvas 中的 3D 场景为 GLB 模型
+        _loadGlbInModal(blobUrl);
+        status.textContent = '精细3D模型已生成';
+      } catch (e) {
+        status.textContent = '生成失败: ' + e.message;
+        console.error(e);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function _loadGlbInModal(blobUrl) {
+      if (window._loadGlbInModal) window._loadGlbInModal(blobUrl);
+    }
+
+    function confirmShape() {
+      let valid = true;
+      ['shape-dim-l','shape-dim-w','shape-dim-h'].forEach(id => {
+        const val = parseFloat(document.getElementById(id).value);
+        if (!val) { document.getElementById(id).style.borderColor = '#f85149'; valid = false; }
+      });
+      if (!valid) return;
+
+      const l = parseFloat(document.getElementById('shape-dim-l').value);
+      const w = parseFloat(document.getElementById('shape-dim-w').value);
+      const h = parseFloat(document.getElementById('shape-dim-h').value);
+      if (_recognizeRowId) {
+        const row = document.getElementById(_recognizeRowId);
+        if (row) {
+          row.querySelector('.item-length').value = l;
+          row.querySelector('.item-width').value  = w;
+          row.querySelector('.item-height').value = h;
+        }
+      }
+      closeShapeModal();
+    }
+
+    // 修改尺寸时实时更新 3D 预览
+    ['shape-dim-l','shape-dim-w','shape-dim-h'].forEach(id => {
+      document.getElementById(id).addEventListener('input', function () {
+        this.style.borderColor = '';
+        const l  = parseFloat(document.getElementById('shape-dim-l').value) || 10;
+        const w  = parseFloat(document.getElementById('shape-dim-w').value) || 10;
+        const h  = parseFloat(document.getElementById('shape-dim-h').value) || 10;
+        const st = document.getElementById('shape-modal').dataset.shapeType || 'box';
+        if (window._renderShapeInModal) window._renderShapeInModal(st, l, w, h);
+      });
+    });
+
+    // ── 初始化：添加3条示例货物 ────────────────────────────────────────────
+    loadDemo();
+    // 恢复保存的 API Key
+    const _savedKey = localStorage.getItem('tripoApiKey');
+    if (_savedKey) document.getElementById('tripo-api-key').value = _savedKey;
+
+    // ══════════════════════════════════════════════════════════════════════
+    // 智能包装 Tab 逻辑
+    // ══════════════════════════════════════════════════════════════════════
+
+    // Tab 切换
+    function switchPanelTab(tab) {
+      document.getElementById('tab-manual').classList.toggle('tab-active', tab === 'manual');
+      document.getElementById('tab-smart').classList.toggle('tab-active',  tab === 'smart');
+      document.getElementById('ptab-manual').classList.toggle('active', tab === 'manual');
+      document.getElementById('ptab-smart').classList.toggle('active',  tab === 'smart');
+      if (tab === 'smart') spInitProvider();
+    }
+    window.switchPanelTab = switchPanelTab;
+
+    // ── Embedding Provider 切换 ────────────────────────────────────────────
+    async function spInitProvider() {
+      try {
+        const r = await fetch('/api/embed-provider');
+        const d = await r.json();
+        _spUpdateProviderUI(d.provider, d.counts);
+      } catch (e) {
+        document.getElementById('sp-pvd-status').textContent = '无法获取状态';
+      }
+    }
+
+    async function spSetProvider(p) {
+      const statusEl = document.getElementById('sp-pvd-status');
+      statusEl.textContent = '切换中...';
+      statusEl.className = 'sp-pvd-status';
+      try {
+        await fetch('/api/embed-provider', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ provider: p }),
+        });
+        const r = await fetch('/api/embed-provider');
+        const d = await r.json();
+        _spUpdateProviderUI(d.provider, d.counts);
+      } catch (e) {
+        statusEl.textContent = '切换失败';
+        statusEl.className = 'sp-pvd-status sp-pvd-warn';
+      }
+    }
+    window.spSetProvider = spSetProvider;
+
+    function _spUpdateProviderUI(provider, counts) {
+      ['voyage', 'local'].forEach(p => {
+        document.getElementById(`pvd-${p}`)?.classList.toggle('active', p === provider);
+      });
+      const count = counts?.[provider] ?? 0;
+      const statusEl = document.getElementById('sp-pvd-status');
+      if (count === 0) {
+        statusEl.textContent = '⚠ 无数据，请先运行 sync_materials.py';
+        statusEl.className = 'sp-pvd-status sp-pvd-warn';
+      } else {
+        statusEl.textContent = `✓ ${count} 条辅材`;
+        statusEl.className = 'sp-pvd-status';
+      }
+    }
+
+    // ── 图片管理 ─────────────────────────────────────────────────────────
+    let _spPhotos = [];   // [{file, b64, mediaType}]
+
+    async function spHandleFiles(files) {
+      for (const f of Array.from(files)) {
+        if (!f.type.startsWith('image/')) continue;
+        // 复用全局 _compressToBase64，最长边限 1024px，JPEG 压缩，保证 < 5MB
+        const b64 = await _compressToBase64(f);
+        _spPhotos.push({ file: f, b64, mediaType: 'image/jpeg' });
+      }
+      _spRenderThumbs();
+    }
+    window.spHandleFiles = spHandleFiles;
+
+    function spHandleDrop(e) {
+      e.preventDefault();
+      document.getElementById('sp-upload-area').classList.remove('dragging');
+      spHandleFiles(e.dataTransfer.files);
+    }
+    window.spHandleDrop = spHandleDrop;
+
+    function _spRenderThumbs() {
+      const row = document.getElementById('sp-thumb-row');
+      row.innerHTML = '';
+      _spPhotos.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'sp-thumb';
+        div.innerHTML = `<img src="data:image/jpeg;base64,${p.b64}" />
+          <button class="sp-thumb-del" onclick="spDeletePhoto(${i})">×</button>`;
+        row.appendChild(div);
+      });
+    }
+
+    function spDeletePhoto(idx) {
+      _spPhotos.splice(idx, 1);
+      _spRenderThumbs();
+    }
+    window.spDeletePhoto = spDeletePhoto;
+
+    // ── 脆弱等级选择 ──────────────────────────────────────────────────────
+    let _spFragility = 'medium';
+    function spSetFragility(level) {
+      _spFragility = level;
+      document.querySelectorAll('.sp-frag-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.level === level);
+      });
+    }
+    window.spSetFragility = spSetFragility;
+    spSetFragility('medium');  // 默认中等
+
+    // ── AI 识别 ──────────────────────────────────────────────────────────
+    async function spRecognize() {
+      if (_spPhotos.length === 0) {
+        alert('请先上传至少一张产品图片');
+        return;
+      }
+      const btn = document.getElementById('sp-recognize-btn');
+      btn.disabled = true;
+      btn.textContent = '识别中...';
+      try {
+        const VIEWS = ['正面', '侧面', '顶面'];
+        const images = _spPhotos.slice(0, 3).map((p, i) => ({
+          image_base64: p.b64,
+          media_type: p.mediaType,
+          view: VIEWS[i] || `视角${i+1}`,
+        }));
+        const resp = await fetch('/api/recognize-shape', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ images }),
+        });
+        if (!resp.ok) {
+          const err = await resp.json();
+          throw new Error(err.detail || resp.statusText);
+        }
+        const data = await resp.json();
+        if (!data.success) throw new Error('识别失败');
+
+        // 填充识别结果
+        document.getElementById('sp-category').value = data.product_category || '';
+        document.getElementById('sp-length').value   = data.length || '';
+        document.getElementById('sp-width').value    = data.width  || '';
+        document.getElementById('sp-height').value   = data.height || '';
+        spSetFragility(data.fragility_level || 'medium');
+
+        document.getElementById('sp-result-box').classList.add('show');
+      } catch (e) {
+        alert('AI识别失败: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'AI识别';
+      }
+    }
+    window.spRecognize = spRecognize;
+
+    // ── 计算最优包装 ──────────────────────────────────────────────────────
+    async function spCalculate() {
+      const category = document.getElementById('sp-category').value.trim();
+      const length   = parseFloat(document.getElementById('sp-length').value);
+      const width    = parseFloat(document.getElementById('sp-width').value);
+      const height   = parseFloat(document.getElementById('sp-height').value);
+      const weight   = parseFloat(document.getElementById('sp-weight').value);
+      const qty      = parseInt(document.getElementById('sp-qty').value) || 1;
+
+      if (!category) { alert('请输入产品品类'); return; }
+      if (!length || !width || !height) { alert('请填写完整的产品尺寸'); return; }
+      if (!weight) { alert('请填写产品重量'); return; }
+
+      const btn = document.getElementById('sp-calc-btn');
+      btn.disabled = true;
+      btn.textContent = '计算中...';
+
+      try {
+        const resp = await fetch('/api/smart-pack', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            product_category: category,
+            fragility_level:  _spFragility,
+            length, width, height, weight,
+            quantity: qty,
+          }),
+        });
+        if (!resp.ok) {
+          const err = await resp.json();
+          throw new Error(err.detail || resp.statusText);
+        }
+        const data = await resp.json();
+        if (!data.success) throw new Error('计算失败');
+
+        _spRenderMaterials(data);
+        _spRenderProfit(data);
+
+        document.getElementById('sp-materials-box').classList.add('show');
+        document.getElementById('sp-profit-box').classList.add('show');
+        document.getElementById('sp-result-box').classList.add('show');
+      } catch (e) {
+        alert('计算失败: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '计算最优包装';
+      }
+    }
+    window.spCalculate = spCalculate;
+
+    function _spRenderMaterials(data) {
+      const list = document.getElementById('sp-materials-list');
+      list.innerHTML = '';
+      (data.materials || []).forEach(mat => {
+        const div = document.createElement('div');
+        div.className = 'sp-mat-item';
+        div.innerHTML = `
+          <div>
+            <div class="sp-mat-name">${mat.type}</div>
+            <div class="sp-mat-desc">${mat.description || ''}</div>
+          </div>
+          <div class="sp-mat-price">¥${mat.unit_price.toFixed(2)}</div>`;
+        list.appendChild(div);
+      });
+      document.getElementById('sp-mat-total-val').textContent =
+        '¥' + (data.material_cost_total || 0).toFixed(2);
+
+      const pd = data.packed_dims || {};
+      document.getElementById('sp-packed-dims').textContent =
+        pd.length ? `${pd.length}×${pd.width}×${pd.height} cm` : '—';
+    }
+
+    // ── 批量导入 & 模板下载 ──────────────────────────────────────────────────
+
+    let _xlsxLib = null;
+    function _loadXlsx() {
+      if (_xlsxLib) return Promise.resolve(_xlsxLib);
+      return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+        s.onload  = () => { _xlsxLib = window.XLSX; resolve(_xlsxLib); };
+        s.onerror = () => reject(new Error('SheetJS 加载失败，请检查网络'));
+        document.head.appendChild(s);
+      });
+    }
+
+    function _downloadBlob(blob, filename) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    async function _makeXlsx(headers, exampleRows, sheetName) {
+      const XLSX = await _loadXlsx();
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...exampleRows]);
+      ws['!cols'] = headers.map(() => ({ wch: 14 }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+      return XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    }
+
+    async function downloadItemTemplate() {
+      try {
+        const headers = ['货物名称', '长(cm)', '宽(cm)', '高(cm)', '重量(kg)', '数量'];
+        const examples = [
+          ['商品A', 30, 20, 15, 1.5, 2],
+          ['商品B', 40, 25, 20, 2.0, 1],
+        ];
+        const buf = await _makeXlsx(headers, examples, '货物列表');
+        _downloadBlob(new Blob([buf], { type: 'application/octet-stream' }), '货物导入模板.xlsx');
+      } catch (e) {
+        // 降级 CSV
+        const rows = [['货物名称','长(cm)','宽(cm)','高(cm)','重量(kg)','数量'],
+                      ['商品A',30,20,15,1.5,2],['商品B',40,25,20,2.0,1]];
+        _downloadBlob(new Blob(['\uFEFF' + rows.map(r=>r.join(',')).join('\n')], {type:'text/csv'}), '货物导入模板.csv');
+      }
+    }
+
+    async function downloadBinTemplate() {
+      try {
+        const headers = ['箱型名称', '长(cm)', '宽(cm)', '高(cm)', '限重(kg)'];
+        const examples = [
+          ['标准箱A', 60, 50, 50, 30],
+          ['小箱B',   40, 30, 30, 15],
+        ];
+        const buf = await _makeXlsx(headers, examples, '箱型列表');
+        _downloadBlob(new Blob([buf], { type: 'application/octet-stream' }), '箱型导入模板.xlsx');
+      } catch (e) {
+        const rows = [['箱型名称','长(cm)','宽(cm)','高(cm)','限重(kg)'],
+                      ['标准箱A',60,50,50,30],['小箱B',40,30,30,15]];
+        _downloadBlob(new Blob(['\uFEFF' + rows.map(r=>r.join(',')).join('\n')], {type:'text/csv'}), '箱型导入模板.csv');
+      }
+    }
+
+    async function _parseFile(file) {
+      const ext = file.name.split('.').pop().toLowerCase();
+      if (ext === 'csv') {
+        const text = await file.text();
+        return text.replace(/^\uFEFF/, '').split(/\r?\n/)
+          .map(line => line.split(',').map(c => c.trim().replace(/^"|"$/g, '')))
+          .filter(row => row.some(c => c !== ''));
+      }
+      const XLSX = await _loadXlsx();
+      const buf  = await file.arrayBuffer();
+      const wb   = XLSX.read(buf, { type: 'array' });
+      const ws   = wb.Sheets[wb.SheetNames[0]];
+      return XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+    }
+
+    function _skipHeader(rows, keywords) {
+      if (!rows.length) return rows;
+      const first = String(rows[0][0] || '').toLowerCase();
+      return keywords.some(k => first.includes(k)) ? rows.slice(1) : rows;
+    }
+
+    async function importItems(input) {
+      const file = input.files[0];
+      if (!file) return;
+      input.value = '';
+      try {
+        const rows = await _parseFile(file);
+        const data = _skipHeader(rows, ['名称','name','货物','item','商品']);
+        if (!data.length) { showError('未找到有效数据行，请参照模板格式'); return; }
+        let added = 0;
+        for (const r of data) {
+          const name      = String(r[0] || '').trim();
+          const length    = parseFloat(r[1]);
+          const width     = parseFloat(r[2]);
+          const height    = parseFloat(r[3]);
+          const weight    = parseFloat(r[4]);
+          const qty       = parseInt(r[5]) || 1;
+          const salePrice = parseFloat(r[6]) || 0;
+          if (!name || isNaN(length) || isNaN(width) || isNaN(height) || isNaN(weight)) continue;
+          addItem(name, length, width, height, weight, qty, salePrice);
+          added++;
+        }
+        if (!added) showError('未找到合法数据行，请对照模板格式检查');
+      } catch (e) {
+        showError('文件解析失败：' + e.message);
+      }
+    }
+
+    async function importBins(input) {
+      const file = input.files[0];
+      if (!file) return;
+      input.value = '';
+      switchBinMode('custom');
+      try {
+        const rows = await _parseFile(file);
+        const data = _skipHeader(rows, ['名称','name','箱型','bin']);
+        if (!data.length) { showError('未找到有效数据行，请参照模板格式'); return; }
+        let added = 0;
+        for (const r of data) {
+          const name   = String(r[0] || '').trim() || '自定义箱';
+          const length = parseFloat(r[1]);
+          const width  = parseFloat(r[2]);
+          const height = parseFloat(r[3]);
+          const weight = parseFloat(r[4]);
+          if (isNaN(length) || isNaN(width) || isNaN(height) || isNaN(weight)) continue;
+          addCustomBin(name, length, width, height, weight);
+          added++;
+        }
+        if (!added) showError('未找到合法数据行，请对照模板格式检查');
+      } catch (e) {
+        showError('文件解析失败：' + e.message);
+      }
+    }
+
+    function _spRenderProfit(data) {
+      const pa = data.profit_analysis || {};
+      const pr = data.packing_result  || {};
+
+      // 外箱信息
+      const bins = pr.packed_bins || [];
+      if (bins.length) {
+        const b = bins[0];
+        document.getElementById('sp-box-type').textContent = b.bin_type || '—';
+        const d = b.dimensions || {};
+        document.getElementById('sp-box-dims').textContent =
+          d.length ? `${d.length}×${d.width}×${d.height} cm` : '';
+      } else {
+        document.getElementById('sp-box-type').textContent = '无合适外箱';
+        document.getElementById('sp-box-dims').textContent = '';
+      }
+
+      // 各项指标
+      const util = pa.space_utilization || 0;
+      document.getElementById('sp-space-util').textContent  = (util * 100).toFixed(1) + '%';
+      document.getElementById('sp-mat-cost').textContent    = '¥' + (pa.material_cost_yuan || 0).toFixed(2);
+      document.getElementById('sp-cost-cm3').textContent    = (pa.cost_per_cm3 || 0).toFixed(4);
+      document.getElementById('sp-prod-vol').textContent    = (pa.product_volume_cm3 || 0).toFixed(1) + ' cm³';
+      document.getElementById('sp-box-vol').textContent     = (pa.box_volume_cm3 || 0).toFixed(1) + ' cm³';
+
+      const score = pa.efficiency_score || 0;
+      document.getElementById('sp-score-val').textContent   = score + ' / 100';
+      document.getElementById('sp-score-fill').style.width  = score + '%';
+    }
+  </script>
+</body>
+</html>
