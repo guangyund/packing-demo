@@ -2475,12 +2475,9 @@
         let res, data;
 
         if (aiMode) {
-          // AI Agent 模式：
-          // - 自定义模式：将用户填写的箱型传入
-          // - 包材库模式：若用户手动选了包材则传入，否则传 null 让后端全量扫描目录
-          const agentBins = currentBinMode === 'custom'
-            ? (bins.length > 0 ? bins : null)
-            : (selectedCatalogBins.length > 0 ? bins : null);
+          // AI Agent 模式：始终传 null，让后端全量扫描 8000+ 种包材目录
+          // 用户填写/选择的箱型只在非 AI 模式下生效
+          const agentBins = null;
           res  = await fetch('/api/agent-pack', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
