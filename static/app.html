@@ -3084,6 +3084,17 @@
       panel.insertAdjacentHTML('afterbegin', banner);
     }
 
+    // crypto.randomUUID 在 HTTP 环境下不可用，降级用 Math.random 实现
+    function _generateUUID() {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+      }
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+    }
+
     async function _runMultiTypeFlow(items, userBins = null) {
       _closeSilencePopup();
       const productTitle = items.find(i => i.product_title && !/^货物\d+$/.test(i.product_title))?.product_title || '';
@@ -3091,7 +3102,7 @@
 
       // 提前生成 sessionId，供 classify 和后续所有 agent-pack 共享
       // classify 结果将在服务端以 sessionId 缓存，agent-pack 无需前端转发
-      const sessionId = crypto.randomUUID();
+      const sessionId = _generateUUID();
 
       // Step1: 分类（20秒超时，失败自动降级本地规则）
       const loadingEl = document.getElementById('loading-text');
