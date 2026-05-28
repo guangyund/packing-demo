@@ -517,6 +517,10 @@
     .ai-model-btn .model-name { font-weight: 500; }
     .ai-model-btn .model-desc { font-size: 10px; color: #8b949e; margin-top: 2px; }
     .ai-model-btn.active .model-desc { color: #388bfd; }
+    .ai-model-btn.ai-model-btn-disabled {
+      opacity: 0.4; cursor: not-allowed;
+    }
+    .ai-model-btn.ai-model-btn-disabled .model-desc { color: #6e7681; }
 
     /* AI 分析说明框 */
     #ai-summary {
@@ -1620,12 +1624,12 @@
           <div id="ai-model-selector">
             <div class="ai-model-label">选择 AI 模型</div>
             <div class="ai-model-btns">
-              <div class="ai-model-btn active" id="ai-model-btn-claude"
-                   onclick="selectAiModel('anthropic','claude-haiku-4-5-20251001','claude')">
+              <div class="ai-model-btn ai-model-btn-disabled" id="ai-model-btn-claude"
+                   onclick="_onClickDisabledModel()">
                 <div class="model-name">Claude Haiku</div>
-                <div class="model-desc">响应快·稳定</div>
+                <div class="model-desc">暂不可用</div>
               </div>
-              <div class="ai-model-btn" id="ai-model-btn-deepseek-v4-flash"
+              <div class="ai-model-btn active" id="ai-model-btn-deepseek-v4-flash"
                    onclick="selectAiModel('deepseek','deepseek-v4-flash','deepseek-v4-flash')">
                 <div class="model-name">DeepSeek V4 Flash</div>
                 <div class="model-desc">推理快·低成本</div>
@@ -2931,8 +2935,8 @@
     }
 
     // ── AI 模式切换 ───────────────────────────────────────────────────────────
-    window._aiProvider = 'anthropic';
-    window._aiModel    = 'claude-haiku-4-5-20251001';
+    window._aiProvider = 'deepseek';
+    window._aiModel    = 'deepseek-v4-flash';
 
     function toggleAIMode(enabled) {
       const binTitle   = document.getElementById('bin-section-title');
@@ -2946,7 +2950,26 @@
       }
     }
 
+    function _showToast(msg) {
+      const existing = document.getElementById('_global_toast');
+      if (existing) existing.remove();
+      const t = document.createElement('div');
+      t.id = '_global_toast';
+      t.textContent = msg;
+      t.style.cssText = 'position:fixed;top:18px;left:50%;transform:translateX(-50%);' +
+        'background:#4a3000;color:#e6a817;border:1px solid #7a5200;border-radius:8px;' +
+        'padding:8px 18px;font-size:13px;z-index:99999;pointer-events:none;' +
+        'box-shadow:0 2px 12px rgba(0,0,0,.4);white-space:nowrap;';
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 2500);
+    }
+
+    function _onClickDisabledModel() {
+      _showToast('额度不足，暂不支持选用此模型');
+    }
+
     function selectAiModel(provider, model, btnKey) {
+      if (provider === 'anthropic') { _onClickDisabledModel(); return; }
       window._aiProvider = provider;
       window._aiModel    = model;
       document.querySelectorAll('.ai-model-btn').forEach(b => b.classList.remove('active'));
