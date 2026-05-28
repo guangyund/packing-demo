@@ -89,6 +89,7 @@
     }
     .item-name-input {
       flex: 1;
+      min-width: 0;
       background: transparent;
       border: none;
       color: #e6edf3;
@@ -112,11 +113,11 @@
 
     .item-fields {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+      grid-template-columns: repeat(3, 1fr);
       gap: 6px;
     }
     .field-group { display: flex; flex-direction: column; gap: 3px; }
-    .field-label { font-size: 10px; color: #484f58; }
+    .field-label { font-size: 10px; color: #484f58; white-space: nowrap; }
     .field-input {
       background: #21262d;
       border: 1px solid #30363d;
@@ -125,6 +126,7 @@
       font-size: 12px;
       padding: 4px 6px;
       width: 100%;
+      box-sizing: border-box;
       outline: none;
       transition: border-color 0.15s;
     }
@@ -325,6 +327,7 @@
       flex: 1;
       position: relative;
       background: #0d1117;
+      overflow: hidden;
     }
 
     /* 空状态提示 */
@@ -492,12 +495,37 @@
     .toggle-switch input:checked + .toggle-slider { background: #1f6feb; }
     .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
 
+    /* AI 模型选择器 */
+    #ai-model-selector {
+      display: none;
+      margin-top: 6px;
+      padding: 8px 12px;
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 8px;
+    }
+    .ai-model-label { font-size: 11px; color: #8b949e; margin-bottom: 6px; }
+    .ai-model-btns  { display: flex; gap: 6px; }
+    .ai-model-btn {
+      flex: 1; padding: 6px 8px; font-size: 11px; border-radius: 6px; cursor: pointer;
+      border: 1px solid #30363d; background: #161b22; color: #c9d1d9;
+      transition: all 0.15s; text-align: center; line-height: 1.4;
+    }
+    .ai-model-btn.active {
+      border-color: #1f6feb; background: #1f3a6e; color: #58a6ff;
+    }
+    .ai-model-btn .model-name { font-weight: 500; }
+    .ai-model-btn .model-desc { font-size: 10px; color: #8b949e; margin-top: 2px; }
+    .ai-model-btn.active .model-desc { color: #388bfd; }
+
     /* AI 分析说明框 */
     #ai-summary {
       display: none;
       position: absolute;
       bottom: 72px; left: 12px;
       max-width: 320px;
+      max-height: calc(100% - 100px);
+      overflow-y: auto;
       background: rgba(22,27,34,0.95);
       border: 1px solid #1f6feb;
       border-radius: 8px;
@@ -508,6 +536,8 @@
       z-index: 5;
       white-space: pre-wrap;
     }
+    #ai-summary::-webkit-scrollbar { width: 4px; }
+    #ai-summary::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
     #ai-summary.show { display: block; }
     #ai-summary strong { color: #58a6ff; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
     #ai-summary.local { border-color: #f0883e; }
@@ -525,7 +555,9 @@
       display: none;
       position: absolute;
       top: 12px; right: 12px;
-      width: 260px;
+      width: 280px;
+      max-height: calc(100% - 24px);
+      overflow-y: auto;
       background: rgba(22,27,34,0.96);
       border: 1px solid #f0883e;
       border-radius: 10px;
@@ -533,6 +565,8 @@
       font-size: 12px;
       z-index: 6;
     }
+    #compare-panel::-webkit-scrollbar { width: 4px; }
+    #compare-panel::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
     #compare-panel.show { display: block; }
     .compare-title {
       font-size: 13px; font-weight: 600;
@@ -548,9 +582,9 @@
       padding: 8px 4px;
     }
     .compare-col + .compare-col { margin-left: 8px; }
-    .compare-col-title { font-size: 10px; color: #8b949e; margin-bottom: 4px; }
-    .compare-col-val   { font-size: 13px; font-weight: 600; color: #e6edf3; }
-    .compare-col-sub   { font-size: 10px; color: #8b949e; margin-top: 2px; }
+    .compare-col-title { font-size: 10px; color: #8b949e; margin-bottom: 4px; word-break: break-word; }
+    .compare-col-val   { font-size: 13px; font-weight: 600; color: #e6edf3; word-break: break-word; }
+    .compare-col-sub   { font-size: 10px; color: #8b949e; margin-top: 2px; word-break: break-word; }
     .winner-badge {
       display: inline-block; margin-top: 8px;
       padding: 3px 10px; border-radius: 12px;
@@ -587,6 +621,290 @@
     }
     .compare-view-btn:hover  { border-color: #58a6ff; color: #58a6ff; }
     .compare-view-btn.active { background: #1f6feb; border-color: #1f6feb; color: white; }
+
+    /* 推荐轮次 Tab */
+    .rec-tabs { display: flex; gap: 4px; margin-bottom: 8px; flex-wrap: wrap; }
+    .rec-tab {
+      padding: 3px 10px; border-radius: 10px; font-size: 11px; cursor: pointer;
+      border: 1px solid #30363d; background: transparent; color: #8b949e;
+    }
+    .rec-tab:hover  { border-color: #58a6ff; color: #58a6ff; }
+    .rec-tab.active { background: #1f2d4a; border-color: #58a6ff; color: #58a6ff; }
+
+    /* AI 分类确认弹窗 */
+    .classify-modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+      display: none; align-items: center; justify-content: center; z-index: 1000;
+    }
+    .classify-modal-overlay.show { display: flex; }
+    .classify-modal {
+      background: #161b22; border: 1px solid #30363d; border-radius: 10px;
+      padding: 20px 22px; width: 360px; max-width: 92vw;
+    }
+    .classify-modal-title {
+      font-size: 14px; font-weight: 600; color: #e6edf3; margin-bottom: 14px;
+    }
+    .classify-chip-toggle {
+      font-size: 12px; padding: 4px 12px; border-radius: 12px; cursor: pointer;
+      border: 1px solid rgba(88,166,255,0.35); background: rgba(88,166,255,0.12);
+      color: #58a6ff; transition: opacity .15s, background .15s;
+    }
+    .classify-chip-toggle:not(.active) { opacity: 0.35; background: transparent; }
+    .classify-modal-footer {
+      display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end;
+    }
+    .classify-skip-btn {
+      padding: 6px 14px; border-radius: 6px; font-size: 12px; cursor: pointer;
+      border: 1px solid #30363d; background: transparent; color: #8b949e;
+    }
+    .classify-skip-btn:hover { color: #e6edf3; border-color: #8b949e; }
+    .classify-confirm-btn {
+      padding: 6px 16px; border-radius: 6px; font-size: 12px; cursor: pointer;
+      border: none; background: #1f6feb; color: #fff; font-weight: 600;
+    }
+    .classify-confirm-btn:hover { background: #388bfd; }
+
+    /* AI 分类 banner */
+    .classify-banner {
+      background: rgba(56,139,253,0.08); border: 1px solid rgba(56,139,253,0.25);
+      border-radius: 7px; padding: 8px 10px; margin-bottom: 8px; font-size: 12px;
+    }
+    .classify-banner-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .protect-badge {
+      font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 10px;
+      flex-shrink: 0;
+    }
+    .protect-badge.high   { background: rgba(248,81,73,0.15); color: #f85149; border: 1px solid rgba(248,81,73,0.3); }
+    .protect-badge.medium { background: rgba(240,136,62,0.15); color: #f0883e; border: 1px solid rgba(240,136,62,0.3); }
+    .protect-badge.low    { background: rgba(63,185,80,0.15);  color: #3fb950; border: 1px solid rgba(63,185,80,0.3); }
+    .classify-type-tag {
+      font-size: 11px; padding: 2px 7px; border-radius: 10px;
+      background: rgba(88,166,255,0.12); color: #58a6ff; border: 1px solid rgba(88,166,255,0.25);
+    }
+    .classify-reason { color: #8b949e; font-size: 11px; margin-top: 4px; }
+
+
+    /* 静默确认轻弹窗 */
+    .silence-popup {
+      position: fixed; bottom: 24px; right: 24px; z-index: 999;
+      background: #161b22; border: 1px solid rgba(240,136,62,0.5); border-radius: 10px;
+      padding: 14px 16px; width: 268px; box-shadow: 0 4px 20px rgba(0,0,0,0.55);
+      display: none;
+    }
+    .silence-popup.show { display: block; }
+    .silence-popup-title { font-size: 13px; font-weight: 600; color: #e6edf3; margin-bottom: 6px; }
+    .silence-popup-plan  { font-size: 11px; color: #f0883e; margin-bottom: 12px; }
+    .silence-popup-btns  { display: flex; gap: 8px; justify-content: flex-end; }
+    .silence-btn-yes {
+      padding: 5px 14px; border-radius: 5px; font-size: 12px; cursor: pointer;
+      border: 1px solid rgba(63,185,80,0.4); background: rgba(63,185,80,0.08); color: #3fb950;
+    }
+    .silence-btn-yes:hover { background: rgba(63,185,80,0.18); }
+    .silence-btn-no {
+      padding: 5px 14px; border-radius: 5px; font-size: 12px; cursor: pointer;
+      border: 1px solid rgba(248,81,73,0.4); background: transparent; color: #f85149;
+    }
+    .silence-btn-no:hover { background: rgba(248,81,73,0.1); }
+    .silence-reason-input {
+      width: 100%; box-sizing: border-box; background: #0d1117; border: 1px solid #30363d;
+      color: #e6edf3; border-radius: 5px; padding: 6px 8px; font-size: 12px;
+      resize: vertical; margin-bottom: 8px; font-family: inherit;
+    }
+    .silence-reason-input:focus { outline: none; border-color: #f0883e; }
+    .silence-btn-cancel {
+      padding: 5px 12px; border-radius: 5px; font-size: 12px; cursor: pointer;
+      border: 1px solid #30363d; background: transparent; color: #8b949e;
+    }
+    .silence-btn-cancel:hover { color: #e6edf3; }
+    .silence-btn-submit {
+      padding: 5px 14px; border-radius: 5px; font-size: 12px; cursor: pointer;
+      border: none; background: #f0883e; color: #fff; font-weight: 600;
+    }
+    .silence-btn-submit:hover { background: #e07830; }
+    .silence-btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+    .silence-reason-cat {
+      width: 100%; box-sizing: border-box; background: #0d1117; border: 1px solid #30363d;
+      color: #e6edf3; border-radius: 5px; padding: 5px 8px; font-size: 12px;
+      margin-bottom: 6px; font-family: inherit;
+    }
+    .silence-reason-cat:focus { outline: none; border-color: #f0883e; }
+    .silence-reason-cat.error { border-color: #f85149; }
+    .silence-reason-error { font-size: 11px; color: #f85149; margin-bottom: 6px; }
+    .silence-reason-input.error { border-color: #f85149; }
+
+    /* 方案切换确认弹窗 */
+    .plan-switch-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+      display: none; align-items: center; justify-content: center; z-index: 1100;
+    }
+    .plan-switch-overlay.show { display: flex; }
+    .plan-switch-modal {
+      background: #161b22; border: 1px solid #30363d; border-radius: 10px;
+      padding: 20px 22px; width: 320px; max-width: 92vw;
+    }
+    .plan-switch-title { font-size: 14px; font-weight: 600; color: #e6edf3; margin-bottom: 10px; }
+    .plan-switch-msg   { font-size: 13px; color: #8b949e; margin-bottom: 16px; line-height: 1.5; }
+    .plan-switch-btns  { display: flex; gap: 8px; justify-content: flex-end; }
+    .plan-switch-cancel {
+      padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer;
+      border: 1px solid #30363d; background: transparent; color: #8b949e;
+    }
+    .plan-switch-cancel:hover { color: #e6edf3; }
+    .plan-switch-confirm {
+      padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer;
+      border: none; background: #f0883e; color: #fff; font-weight: 600;
+    }
+    .plan-switch-confirm:hover { background: #e07830; }
+
+    /* 优化反馈浮动按钮 */
+    #opt-feedback-btn {
+      position: fixed; bottom: 80px; right: 24px; z-index: 900;
+      background: #1f6feb; color: #fff; border: none; border-radius: 22px;
+      padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer;
+      box-shadow: 0 3px 12px rgba(31,111,235,0.4);
+      display: none;
+    }
+    #opt-feedback-btn.visible { display: block; }
+    #opt-feedback-btn:hover { background: #1a5dc8; }
+
+    /* 优化反馈弹窗 */
+    .opt-feedback-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+      display: none; align-items: center; justify-content: center; z-index: 1100;
+    }
+    .opt-feedback-overlay.show { display: flex; }
+    .opt-feedback-modal {
+      background: #161b22; border: 1px solid #30363d; border-radius: 10px;
+      padding: 20px 22px; width: 380px; max-width: 92vw;
+    }
+    .opt-feedback-title { font-size: 14px; font-weight: 600; color: #e6edf3; margin-bottom: 12px; }
+    .opt-feedback-label { font-size: 12px; color: #8b949e; margin-bottom: 4px; }
+    .opt-feedback-select {
+      width: 100%; box-sizing: border-box; background: #0d1117; border: 1px solid #30363d;
+      color: #e6edf3; border-radius: 5px; padding: 6px 8px; font-size: 13px;
+      margin-bottom: 10px; font-family: inherit;
+    }
+    .opt-feedback-select:focus { outline: none; border-color: #58a6ff; }
+    .opt-feedback-textarea {
+      width: 100%; box-sizing: border-box; background: #0d1117; border: 1px solid #30363d;
+      color: #e6edf3; border-radius: 5px; padding: 7px 9px; font-size: 13px;
+      resize: vertical; margin-bottom: 6px; font-family: inherit; min-height: 80px;
+    }
+    .opt-feedback-textarea:focus { outline: none; border-color: #58a6ff; }
+    .opt-feedback-textarea.error { border-color: #f85149; }
+    .opt-feedback-error { font-size: 12px; color: #f85149; margin-bottom: 8px; }
+    .opt-feedback-btns { display: flex; gap: 8px; justify-content: flex-end; }
+    .opt-fb-cancel {
+      padding: 6px 14px; border-radius: 6px; font-size: 13px; cursor: pointer;
+      border: 1px solid #30363d; background: transparent; color: #8b949e;
+    }
+    .opt-fb-cancel:hover { color: #e6edf3; }
+    .opt-fb-submit {
+      padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer;
+      border: none; background: #1f6feb; color: #fff; font-weight: 600;
+    }
+    .opt-fb-submit:hover { background: #1a5dc8; }
+    .opt-fb-done { text-align: center; padding: 20px 0; color: #3fb950; font-size: 14px; }
+
+    /* 沉默超时模糊遮罩 */
+    #canvas-blur-overlay {
+      display: none; position: absolute; inset: 0; z-index: 5;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      background: rgba(13,17,23,0.55);
+      flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    }
+    #canvas-blur-overlay.show { display: flex; }
+    .blur-lock-icon  { font-size: 28px; }
+    .blur-lock-title { font-size: 14px; font-weight: 600; color: #e6edf3; }
+    .blur-lock-sub   { font-size: 12px; color: #8b949e; }
+
+    /* 结论区模糊遮罩 */
+    #compare-conclusion { position: relative; margin-top: 8px; }
+    #conclusion-blur {
+      display: none; position: absolute; inset: -4px; z-index: 2;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      background: rgba(13,17,23,0.6); border-radius: 6px;
+      align-items: center; justify-content: center;
+      font-size: 11px; color: #8b949e; text-align: center; padding: 6px;
+    }
+    #conclusion-blur.show { display: flex; }
+
+    /* 选定方案按钮 */
+    .compare-select-btn {
+      margin-top: 10px; width: 100%; padding: 8px 4px; border-radius: 5px;
+      font-size: 12px; cursor: pointer; border: 1px solid #3d444d;
+      background: #161b22; color: #8b949e; text-align: center;
+      transition: all 0.2s; font-weight: 500;
+    }
+    .compare-select-btn:hover { border-color: #58a6ff; color: #58a6ff; background: #1c2333; }
+
+    /* 推荐方案按钮 */
+    .compare-select-btn.recommend {
+      border-color: #1f6feb; background: #132035; color: #79c0ff;
+      font-size: 13px; padding: 9px 4px; font-weight: 700;
+      animation: btn-pulse 2.2s ease-in-out infinite;
+    }
+    .compare-select-btn.recommend:hover {
+      background: #1f6feb; color: #fff; border-color: #388bfd; animation: none;
+    }
+    @keyframes btn-pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(31,111,235,0.0); }
+      50%       { box-shadow: 0 0 0 3px rgba(31,111,235,0.35); }
+    }
+    /* 推荐方案列 — 选定前蓝色边框预高亮 */
+    .compare-col.recommend { border: 1px solid rgba(31,111,235,0.45); }
+    /* AI推荐小标签 */
+    .recommend-tag {
+      display: inline-block; margin-left: 4px;
+      padding: 0px 5px; border-radius: 8px; font-size: 9px;
+      background: rgba(31,111,235,0.2); color: #58a6ff;
+      border: 1px solid rgba(31,111,235,0.4); vertical-align: middle;
+      line-height: 1.6;
+    }
+
+    /* 已选定 / 自动选中 — 覆盖推荐样式 */
+    .compare-select-btn.selected {
+      border-color: #3fb950; background: #1a2d1e; color: #3fb950;
+      pointer-events: none; animation: none; font-weight: 600;
+    }
+    .compare-col.selected { border: 1px solid #3fb950; background: #111d14; border-radius: 6px; }
+    .compare-select-btn.auto-selected { border-color: #f0883e; background: rgba(240,136,62,0.1); color: #f0883e; animation: none; }
+    .compare-col.auto-selected { border: 1px solid rgba(240,136,62,0.4); background: rgba(240,136,62,0.04); border-radius: 6px; }
+
+    /* 反馈确认区 */
+    .feedback-section {
+      margin-top: 12px; border: 1px solid rgba(63,185,80,0.35);
+      border-radius: 6px; padding: 10px; background: rgba(63,185,80,0.04);
+    }
+    .feedback-label { font-size: 12px; color: #3fb950; margin-bottom: 8px; font-weight: 500; }
+    .feedback-btns  { display: flex; gap: 6px; }
+    .feedback-btn-adopt {
+      flex: 1; padding: 6px 4px; border-radius: 5px; font-size: 11px;
+      cursor: pointer; border: 1px solid #3fb950; background: #1a2d1e;
+      color: #3fb950; text-align: center;
+    }
+    .feedback-btn-other {
+      flex: 1; padding: 6px 4px; border-radius: 5px; font-size: 11px;
+      cursor: pointer; border: 1px solid #30363d; background: transparent;
+      color: #8b949e; text-align: center;
+    }
+    .feedback-btn-adopt:hover { background: #1f3a24; }
+    .feedback-btn-other:hover { border-color: #58a6ff; color: #58a6ff; }
+    .feedback-changed { display: none; margin-top: 8px; }
+    .feedback-input {
+      width: 100%; padding: 5px 8px; background: #0d1117;
+      border: 1px solid #30363d; border-radius: 4px;
+      color: #e6edf3; font-size: 12px; margin-bottom: 6px;
+    }
+    .feedback-input:focus { outline: none; border-color: #58a6ff; }
+    .feedback-input.error { border-color: #f85149; }
+    .feedback-submit {
+      width: 100%; padding: 6px; border-radius: 5px; font-size: 12px;
+      cursor: pointer; border: 1px solid #58a6ff; background: #1f2d4a;
+      color: #58a6ff; text-align: center;
+    }
+    .feedback-submit:hover { background: #1f6feb; border-color: #1f6feb; color: white; }
+    .feedback-done { display: none; text-align: center; color: #3fb950; font-size: 12px; padding: 6px 0; }
 
     /* 统计栏 */
     #stats-bar {
@@ -1044,10 +1362,210 @@
     .sp-pvd-status { font-size: 11px; color: #3fb950; margin-left: auto; }
     .sp-pvd-warn { color: #f0883e !important; }
 
+    /* 复现区 */
+    #replay-bar {
+      padding: 8px 16px;
+      border-top: 1px solid #21262d;
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+      align-items: center;
+    }
+    #replay-calc-no {
+      flex: 1;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #e6edf3;
+      font-size: 12px;
+      padding: 5px 9px;
+      outline: none;
+      font-family: monospace;
+    }
+    #replay-calc-no::placeholder { color: #484f58; }
+    #replay-calc-no:focus { border-color: #58a6ff; }
+    #replay-btn {
+      padding: 5px 12px;
+      background: transparent;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      color: #8b949e;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .15s;
+    }
+    #replay-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+    #replay-btn:disabled { opacity: .45; cursor: not-allowed; }
+    #replay-banner {
+      background: #161b22;
+      border-bottom: 1px solid #21262d;
+      padding: 6px 16px;
+      font-size: 12px;
+      color: #8b949e;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
     /* 智能包装底部操作 */
     #sp-footer {
       padding: 12px 16px; border-top: 1px solid #21262d;
       display: flex; gap: 8px; flex-shrink: 0;
+    }
+
+    /* 可拖动浮层 */
+    .draggable-panel { cursor: grab; user-select: none; }
+    .draggable-panel.dragging { cursor: grabbing; }
+    .draggable-panel .drag-grip {
+      display: flex; align-items: center; justify-content: center;
+      gap: 4px; margin-bottom: 6px; opacity: 0.35;
+      font-size: 11px; color: #8b949e; letter-spacing: 1px;
+      cursor: grab;
+    }
+    .draggable-panel.dragging .drag-grip { cursor: grabbing; }
+    .draggable-panel button,
+    .draggable-panel input,
+    .draggable-panel select,
+    .draggable-panel textarea { cursor: auto; }
+
+    /* ── 版本号标签 & 历程入口 ── */
+    .version-badge {
+      font-size: 11px; font-weight: 600;
+      color: #3fb950; background: rgba(63,185,80,0.12);
+      border: 1px solid rgba(63,185,80,0.3);
+      border-radius: 4px; padding: 2px 7px; margin-left: 4px;
+      letter-spacing: 0.3px; white-space: nowrap;
+    }
+    .version-log-btn {
+      font-size: 11px; color: #8b949e; background: none;
+      border: none; cursor: pointer; padding: 0 4px;
+      text-decoration: underline; text-underline-offset: 2px;
+      transition: color 0.15s;
+    }
+    .version-log-btn:hover { color: #58a6ff; }
+    header .header-right {
+      margin-left: auto; display: flex; align-items: center; gap: 8px;
+    }
+
+    /* ── 公告 & 历程 通用遮罩 ── */
+    .vmodal-overlay {
+      position: fixed; inset: 0; z-index: 9100;
+      background: rgba(1,4,9,0.75); backdrop-filter: blur(2px);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .vmodal-overlay.hidden { display: none; }
+
+    /* ── 版本公告弹窗 ── */
+    .announce-modal {
+      background: #161b22; border: 1px solid #30363d;
+      border-radius: 12px; width: 480px; max-width: 92vw;
+      max-height: 80vh; display: flex; flex-direction: column;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+    }
+    .announce-header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid #21262d;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .announce-header h2 { font-size: 15px; font-weight: 700; color: #e6edf3; }
+    .announce-tag {
+      font-size: 11px; font-weight: 600;
+      color: #3fb950; background: rgba(63,185,80,0.12);
+      border: 1px solid rgba(63,185,80,0.3);
+      border-radius: 4px; padding: 2px 7px;
+    }
+    .announce-date { font-size: 11px; color: #484f58; margin-left: auto; }
+    .announce-body {
+      padding: 16px 20px; overflow-y: auto; flex: 1;
+      font-size: 13px; color: #8b949e; line-height: 1.7;
+    }
+    .announce-body::-webkit-scrollbar { width: 4px; }
+    .announce-body::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+    .announce-section-title {
+      font-size: 12px; font-weight: 700; color: #58a6ff;
+      text-transform: uppercase; letter-spacing: 0.5px;
+      margin: 14px 0 6px;
+    }
+    .announce-section-title:first-child { margin-top: 0; }
+    .announce-body ul { padding-left: 16px; }
+    .announce-body li { margin-bottom: 4px; color: #c9d1d9; }
+    .announce-footer {
+      padding: 12px 20px 16px;
+      border-top: 1px solid #21262d;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .announce-history-link {
+      font-size: 12px; color: #8b949e; background: none; border: none;
+      cursor: pointer; text-decoration: underline; text-underline-offset: 2px;
+      transition: color 0.15s; padding: 0;
+    }
+    .announce-history-link:hover { color: #58a6ff; }
+    .announce-close-btn {
+      background: #238636; color: #fff; border: none;
+      border-radius: 6px; padding: 6px 20px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .announce-close-btn:hover { background: #2ea043; }
+
+    /* ── 版本历程弹窗 ── */
+    .changelog-modal {
+      background: #161b22; border: 1px solid #30363d;
+      border-radius: 12px; width: 520px; max-width: 92vw;
+      max-height: 82vh; display: flex; flex-direction: column;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+    }
+    .changelog-header {
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid #21262d;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .changelog-header h2 { font-size: 15px; font-weight: 700; color: #e6edf3; }
+    .changelog-close-x {
+      background: none; border: none; color: #8b949e;
+      font-size: 18px; cursor: pointer; line-height: 1; padding: 0 2px;
+      transition: color 0.15s;
+    }
+    .changelog-close-x:hover { color: #e6edf3; }
+    .changelog-body {
+      padding: 16px 20px 20px; overflow-y: auto; flex: 1;
+    }
+    .changelog-body::-webkit-scrollbar { width: 4px; }
+    .changelog-body::-webkit-scrollbar-thumb { background: #30363d; border-radius: 2px; }
+    .cl-version-block { margin-bottom: 28px; }
+    .cl-version-block:last-child { margin-bottom: 0; }
+    .cl-version-head {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+    }
+    .cl-version-num {
+      font-size: 14px; font-weight: 700; color: #e6edf3;
+    }
+    .cl-tag-latest {
+      font-size: 10px; font-weight: 600; color: #3fb950;
+      background: rgba(63,185,80,0.12); border: 1px solid rgba(63,185,80,0.3);
+      border-radius: 3px; padding: 1px 6px;
+    }
+    .cl-tag-server {
+      font-size: 10px; font-weight: 600; color: #58a6ff;
+      background: rgba(88,166,255,0.1); border: 1px solid rgba(88,166,255,0.25);
+      border-radius: 3px; padding: 1px 6px;
+    }
+    .cl-date { font-size: 11px; color: #484f58; margin-left: auto; }
+    .cl-section {
+      margin-bottom: 8px;
+    }
+    .cl-section-name {
+      font-size: 11px; font-weight: 700; color: #58a6ff;
+      text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px;
+    }
+    .cl-section ul { padding-left: 16px; }
+    .cl-section li {
+      font-size: 12px; color: #c9d1d9; line-height: 1.65; margin-bottom: 2px;
+    }
+    .cl-divider {
+      border: none; border-top: 1px solid #21262d; margin: 20px 0;
     }
   </style>
 </head>
@@ -1056,6 +1574,10 @@
   <header>
     <h1>智能包装系统</h1>
     <span>填写货物和箱型，自动生成装箱方案并播放演示</span>
+    <div class="header-right">
+      <span class="version-badge">V1.0.1</span>
+      <button class="version-log-btn" onclick="openChangelog()">版本历程</button>
+    </div>
   </header>
 
   <main>
@@ -1087,12 +1609,33 @@
           <div class="ai-toggle-wrap">
             <div>
               <div class="ai-toggle-label">AI 自动选箱模式</div>
-              <div class="ai-toggle-sub">由 Claude 自动分析并选择最优箱型</div>
+              <div class="ai-toggle-sub" id="ai-toggle-sub-text">由 AI 自动分析并选择最优箱型</div>
             </div>
             <label class="toggle-switch">
               <input type="checkbox" id="ai-mode-toggle" onchange="toggleAIMode(this.checked)" />
               <span class="toggle-slider"></span>
             </label>
+          </div>
+          <!-- AI 模型选择器（AI模式开启后显示）-->
+          <div id="ai-model-selector">
+            <div class="ai-model-label">选择 AI 模型</div>
+            <div class="ai-model-btns">
+              <div class="ai-model-btn active" id="ai-model-btn-claude"
+                   onclick="selectAiModel('anthropic','claude-haiku-4-5-20251001','claude')">
+                <div class="model-name">Claude Haiku</div>
+                <div class="model-desc">响应快·稳定</div>
+              </div>
+              <div class="ai-model-btn" id="ai-model-btn-deepseek-v4-flash"
+                   onclick="selectAiModel('deepseek','deepseek-v4-flash','deepseek-v4-flash')">
+                <div class="model-name">DeepSeek V4 Flash</div>
+                <div class="model-desc">推理快·低成本</div>
+              </div>
+              <div class="ai-model-btn" id="ai-model-btn-deepseek-v4-pro"
+                   onclick="selectAiModel('deepseek','deepseek-v4-pro','deepseek-v4-pro')">
+                <div class="model-name">DeepSeek V4 Pro</div>
+                <div class="model-desc">深度推理·高精度</div>
+              </div>
+            </div>
           </div>
 
           <!-- 箱型设置 -->
@@ -1138,6 +1681,10 @@
           </div>
         </div>
 
+        <div id="replay-bar">
+          <input type="text" id="replay-calc-no" placeholder="输入计算编号复现历史方案" maxlength="32" />
+          <button id="replay-btn" onclick="replayScheme()">复现</button>
+        </div>
         <div id="input-footer">
           <button class="demo-btn" onclick="loadDemo()">示例数据</button>
           <button class="calc-btn" id="calc-btn" onclick="calculate()">开始计算</button>
@@ -1312,6 +1859,13 @@
 
         <!-- 新包材对比面板 -->
         <div id="compare-panel"></div>
+
+        <!-- 沉默超时模糊遮罩（覆盖 3D 画布，低于 compare-panel） -->
+        <div id="canvas-blur-overlay">
+          <div class="blur-lock-icon">🔒</div>
+          <div class="blur-lock-title">选定方案后解锁 3D 视图</div>
+          <div class="blur-lock-sub">在右侧对比面板中点击「选定此方案」</div>
+        </div>
       </div>
 
       <!-- 悬停提示 -->
@@ -1428,15 +1982,13 @@
         <div id="shape-dim-hint">尺寸为 AI 估算，确认前请与实物核对，可直接修改数值（3D 预览实时更新）</div>
 
         <div id="shape-3d-gen-row" style="margin:8px 0 4px;">
-          <div style="display:flex;gap:6px;margin-bottom:6px;">
-            <input id="tripo-api-key" type="password" placeholder="Tripo3D API Key（tsk_...）"
-              style="flex:1;background:#0d1117;border:1px solid #30363d;border-radius:6px;
-                     padding:5px 8px;color:#e6edf3;font-size:12px;outline:none;"
-              oninput="localStorage.setItem('tripoApiKey', this.value)"
-            />
+          <div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">
+            <span style="flex:1;font-size:11px;color:#6e7681;padding:5px 0;">
+              Tripo3D API Key 已由服务端统一管理（TRIPO3D_API_KEY）
+            </span>
             <a href="https://platform.tripo3d.ai" target="_blank"
                style="font-size:11px;color:#58a6ff;align-self:center;white-space:nowrap;text-decoration:none;">
-              获取 Key →
+              官网 →
             </a>
           </div>
           <div style="display:flex;gap:6px;">
@@ -1859,6 +2411,7 @@
           ${detailRows}
         </div>
       `;
+      _makeDraggable(statsEl);
 
       // 相机适配
       const maxD = Math.max(L, W, H);
@@ -2215,14 +2768,10 @@
             <div class="field-label">售价($)</div>
             <input class="field-input item-sale-price" type="number" min="0" step="0.01" value="${salePrice}" placeholder="USD" />
           </div>
-          <div class="field-group" style="flex:1.4">
+          <div class="field-group" style="grid-column: 1 / -1">
             <div class="field-label">产品类别</div>
             <select class="field-input item-category" style="cursor:pointer">${catOpts}</select>
           </div>
-        </div>
-        <div style="margin-top:6px;display:flex;align-items:center;gap:6px">
-          <input type="checkbox" class="item-soft-ok" id="${id}-soft" ${softOk ? 'checked' : ''} style="cursor:pointer;accent-color:#58a6ff" />
-          <label for="${id}-soft" style="font-size:11px;color:#8b949e;cursor:pointer">允许软包材（如多层袋）</label>
         </div>
       `;
       container.appendChild(row);
@@ -2382,17 +2931,471 @@
     }
 
     // ── AI 模式切换 ───────────────────────────────────────────────────────────
+    window._aiProvider = 'anthropic';
+    window._aiModel    = 'claude-haiku-4-5-20251001';
+
     function toggleAIMode(enabled) {
-      const binTitle = document.getElementById('bin-section-title');
+      const binTitle   = document.getElementById('bin-section-title');
+      const modelSel   = document.getElementById('ai-model-selector');
       if (enabled) {
         binTitle.textContent = '箱型设置（自定义时 AI 优先使用，否则自动从预设中选）';
+        if (modelSel) modelSel.style.display = 'block';
       } else {
         binTitle.textContent = '箱型设置';
+        if (modelSel) modelSel.style.display = 'none';
+      }
+    }
+
+    function selectAiModel(provider, model, btnKey) {
+      window._aiProvider = provider;
+      window._aiModel    = model;
+      document.querySelectorAll('.ai-model-btn').forEach(b => b.classList.remove('active'));
+      const btn = document.getElementById('ai-model-btn-' + btnKey);
+      if (btn) btn.classList.add('active');
+      const sub = document.getElementById('ai-toggle-sub-text');
+      if (sub) {
+        const labels = {
+          'claude-haiku-4-5-20251001': '由 Claude Haiku 自动分析并选择最优箱型',
+          'deepseek-v4-flash':         '由 DeepSeek V4 Flash 自动分析并选择最优箱型',
+          'deepseek-v4-pro':           '由 DeepSeek V4 Pro 自动分析并选择最优箱型',
+        };
+        sub.textContent = labels[model] || '由 AI 自动分析并选择最优箱型';
+      }
+    }
+
+    // ── AI 分类 + 多类型推荐流程 ─────────────────────────────────────────────
+
+    // 前端本地关键词兜底（API 完全不可用时使用）
+    const _LOCAL_CLASSIFY_RULES = [
+      ['low',    ['袋子'],    ['衣','裤','裙','袜','内衣','帽','手套','围巾','毛衣','外套','服装','布料','毛巾','床单','被','枕套'], '服装/纺织类，建议袋子包装'],
+      ['high',   ['三层纸箱','纸箱'], ['玻璃','陶瓷','瓷','杯','碗','盘','壶','灯泡','灯管','镜','相机','镜头','仪器','手表','首饰','珠宝','钟'], '易碎/高价值类，建议三层纸箱高防护'],
+      ['medium', ['三层纸箱','纸箱'], ['手机','平板','电脑','显示器','耳机','键盘','鼠标','充电','适配器','音响','路由器','电子'], '电子类，建议纸箱包装'],
+      ['medium', ['纸箱','三层纸箱'], ['玩具','模型','手办','积木','拼图'], '玩具/模型类，建议纸箱包装'],
+      ['low',    ['袋子','纸箱'],   ['书','本','笔','文件','海报','贴纸','卡片','信封'], '文具/印刷类，轻巧包装'],
+      ['low',    ['袋子'],   ['食品','零食','糖','茶叶','咖啡','调料'], '食品类，防潮袋包装'],
+    ];
+    function _localClassifyJS(productTitle, productCategory) {
+      if (productCategory === '服装产品') {
+        return {protection_level:'low', suitable_types:['袋子'], reason:'服装类，建议袋子包装', source:'local'};
+      }
+      for (const [level, types, keywords, reason] of _LOCAL_CLASSIFY_RULES) {
+        if (keywords.some(k => productTitle.includes(k))) {
+          return {protection_level: level, suitable_types: types, reason, source: 'local'};
+        }
+      }
+      return {protection_level:'medium', suitable_types:['纸箱'], reason:'无明显品类特征，默认中等防护', source:'local'};
+    }
+
+    let _classifyConfirmResolve = null;
+
+    function _showClassifyConfirm(result) {
+      return new Promise((resolve) => {
+        _classifyConfirmResolve = resolve;
+        const levelLabel = {high: '高防护', medium: '中等防护', low: '低防护'}[result.protection_level] || result.protection_level;
+        const ALL_TYPES = ['纸箱', '三层纸箱', '单层纸箱', '袋子'];
+        // 各类型防护等级及包含包材
+        const TYPE_META = {
+          '纸箱':    { lv: 4, lvColor: '#f78166', contains: '纸箱' },
+          '三层纸箱': { lv: 3, lvColor: '#e3b341', contains: '飞机盒、牛皮纸盒' },
+          '单层纸箱': { lv: 2, lvColor: '#58a6ff', contains: '白卡盒' },
+          '袋子':    { lv: 1, lvColor: '#8b949e', contains: '珠光袋、自封袋、真空袋、拉链袋、信封袋、纱布袋、绒布袋' },
+        };
+        const recommended = new Set(result.suitable_types || ['纸箱']);
+        const chips = ALL_TYPES.map(t => {
+          const isRec = recommended.has(t);
+          const meta = TYPE_META[t] || { lv: 1, lvColor: '#8b949e', contains: '' };
+          const dots = Array.from({length: 4}, (_, i) =>
+            `<span style="width:4px;height:4px;border-radius:50%;background:${i < meta.lv ? meta.lvColor : '#30363d'};display:inline-block;flex-shrink:0"></span>`
+          ).join('');
+          return `<button class="classify-chip-toggle ${isRec ? 'active' : ''}" data-type="${t}"
+                    onclick="this.classList.toggle('active')" style="position:relative;display:inline-flex;flex-direction:column;align-items:center;gap:2px;padding:7px 12px 6px;"
+                    title="包含：${meta.contains}">
+                    ${!isRec ? '<span style="position:absolute;top:3px;right:5px;font-size:9px;opacity:0.4">+</span>' : ''}
+                    <span style="font-size:12px;font-weight:600">${t}</span>
+                    <span style="display:flex;align-items:center;gap:2px">${dots}</span>
+                    <span style="font-size:9px;opacity:0.55;letter-spacing:0.3px">Lv.${meta.lv}</span>
+                  </button>`;
+        }).join('');
+        const sourceLabel = {ai: '🤖 AI分析', keyword: '🔍 规则匹配', local: '📋 本地规则'}[result.source] || '';
+        const sourceBadge = sourceLabel
+          ? `<span style="font-size:10px;color:#8b949e;background:#21262d;padding:1px 6px;border-radius:8px;border:1px solid #30363d">${sourceLabel}</span>`
+          : '';
+        // 包材类型明细说明（底部小字）
+        const typeDetails = ALL_TYPES.map(t => {
+          const meta = TYPE_META[t];
+          return `<span style="white-space:nowrap"><span style="color:#c9d1d9">${t}</span><span style="color:#484f58">：${meta.contains}</span></span>`;
+        }).join('<span style="color:#30363d;margin:0 5px">·</span>');
+        document.getElementById('classify-modal-content').innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+            <span style="color:#8b949e;font-size:12px">防护级别：</span>
+            <span class="protect-badge ${result.protection_level || 'medium'}">${levelLabel}</span>
+            ${sourceBadge}
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px">
+            <span style="color:#8b949e;font-size:12px">选择包材类型（已选中为推荐，可增减）：</span>
+            <span style="font-size:10px;color:#6e7681;white-space:nowrap">防护等级 Lv 越高保护性能越好</span>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px" id="classify-type-chips">${chips}</div>
+          <div style="font-size:10px;color:#6e7681;line-height:1.9;padding:6px 0;border-top:1px solid #21262d;margin-bottom:8px;flex-wrap:wrap;display:flex;align-items:baseline;gap:0">${typeDetails}</div>
+          ${result.reason ? `<div style="font-size:11px;color:#8b949e;margin-bottom:8px">${result.reason}</div>` : ''}
+          <div style="font-size:11px;color:#6e7681;background:#21262d;border:1px solid #30363d;border-radius:6px;padding:7px 10px;line-height:1.6">
+            💡 系统将从所选类型的包材库中筛选，为您匹配多套较优方案（含空间利用率、FBA 费档对比），并同步生成定制尺寸方案，供综合参考与选择。
+          </div>
+        `;
+        document.getElementById('classify-confirm-modal').classList.add('show');
+      });
+    }
+
+    function _confirmClassify() {
+      const selected = Array.from(document.querySelectorAll('#classify-type-chips .classify-chip-toggle.active'))
+        .map(el => el.dataset.type);
+      document.getElementById('classify-confirm-modal').classList.remove('show');
+      if (_classifyConfirmResolve) {
+        _classifyConfirmResolve(selected.length ? selected : null);
+        _classifyConfirmResolve = null;
+      }
+    }
+
+    function _skipClassify() {
+      document.getElementById('classify-confirm-modal').classList.remove('show');
+      if (_classifyConfirmResolve) {
+        _classifyConfirmResolve(null);
+        _classifyConfirmResolve = null;
+      }
+    }
+
+    function _injectClassifyBanner(result) {
+      const panel = document.getElementById('compare-panel');
+      if (!panel) return;
+      const levelLabel = {high: '高防护', medium: '中等防护', low: '低防护'}[result.protection_level] || result.protection_level;
+      const types = (result.suitable_types || []).map(t =>
+        `<span class="classify-type-tag">${t}</span>`).join(' ');
+      const srcLabel = result.source === 'ai' ? 'AI分析:' : '规则匹配:';
+      const banner = `<div class="classify-banner" id="classify-banner">
+        <div class="classify-banner-row">
+          <span style="color:#8b949e;font-size:11px">${srcLabel}</span>
+          <span class="protect-badge ${result.protection_level || 'medium'}">${levelLabel}</span>
+          <span style="color:#8b949e;font-size:11px">建议包材类型:</span>
+          ${types}
+        </div>
+        ${result.reason ? `<div class="classify-reason">${result.reason}</div>` : ''}
+      </div>`;
+      // 插入到 panel 内容最顶部（tabBar 之前）
+      panel.insertAdjacentHTML('afterbegin', banner);
+    }
+
+    async function _runMultiTypeFlow(items, userBins = null) {
+      _closeSilencePopup();
+      const productTitle = items.find(i => i.product_title && !/^货物\d+$/.test(i.product_title))?.product_title || '';
+      const productCat   = items.find(i => i.product_category)?.product_category || '常规类产品';
+
+      // 提前生成 sessionId，供 classify 和后续所有 agent-pack 共享
+      // classify 结果将在服务端以 sessionId 缓存，agent-pack 无需前端转发
+      const sessionId = crypto.randomUUID();
+
+      // Step1: 分类（20秒超时，失败自动降级本地规则）
+      const loadingEl = document.getElementById('loading-text');
+      if (loadingEl) loadingEl.textContent = 'AI分析产品包装类型...';
+      let classifyResult;
+      let _classifyFromServer = false;  // 标记是否来自服务端（服务端已缓存则不需前端回传）
+      try {
+        const controller = new AbortController();
+        const tid = setTimeout(() => controller.abort(), 20000);
+        const cr = await fetch('/api/classify-product', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          // 传入 session_id，服务端缓存分类结果，后续 agent-pack 凭此取用
+          body: JSON.stringify({product_title: productTitle, product_category: productCat,
+            ai_provider: window._aiProvider || 'anthropic', ai_model: window._aiModel || null,
+            session_id: sessionId}),
+          signal: controller.signal,
+        });
+        clearTimeout(tid);
+        if (!cr.ok) throw new Error(`HTTP ${cr.status}`);
+        classifyResult = await cr.json();
+        _classifyFromServer = true;  // 服务端已缓存，agent-pack 不需前端转发
+      } catch (e) {
+        console.warn('[classify] API不可用，使用本地规则兜底:', e.message);
+        classifyResult = _localClassifyJS(productTitle, productCat);
+        _classifyFromServer = false;  // 本地兜底，服务端无缓存，仍需前端传入
+      }
+
+      // Step2: 暂停 loading，弹窗让用户确认/调整类型
+      showLoading(false);
+      const confirmedTypes = await _showClassifyConfirm(classifyResult);
+      showLoading(true);
+
+      let suitableTypes;
+      if (!confirmedTypes) {
+        // 用户跳过分类：走普通单次推荐
+        const loadingEl2 = document.getElementById('loading-text');
+        if (loadingEl2) loadingEl2.textContent = '计算中...';
+        // classify_result 服务端已缓存（_classifyFromServer=true 时），只传 session_id 即可
+        // 本地兜底时仍需传 classify_result，服务端会接受作为降级值
+        const resp = await fetch('/api/agent-pack', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            items, bins: null, user_bins: userBins,
+            session_id: sessionId,
+            classify_result: _classifyFromServer ? null : classifyResult,
+            ai_provider: window._aiProvider || 'anthropic', ai_model: window._aiModel || null,
+          }),
+        }).then(r => r.json());
+        if (resp.success && resp.compare_result) {
+          window._currentResultId = resp.result_id || null;
+          window._currentItems    = items;
+          showComparePanel(resp.compare_result);
+          const rd = resp.final_result?.packed_bins?.length ? resp.final_result
+                   : resp.compare_result?.recommended_result?.packed_bins?.length ? resp.compare_result.recommended_result
+                   : resp.compare_result?.best_full_result;
+          if (rd?.packed_bins?.length) window._renderResult(rd);
+          if (resp.agent_summary) {
+            const aiUsed = !!resp.ai_used;
+            document.getElementById('ai-summary-title').textContent = aiUsed ? 'AI 分析说明' : '算法计算结果';
+            document.getElementById('ai-summary-badge').textContent = aiUsed ? 'AI 驱动' : '本地模式';
+            document.getElementById('ai-summary-text').textContent  = resp.agent_summary;
+            document.getElementById('ai-summary').className = 'show ' + (aiUsed ? 'ai' : 'local');
+          }
+        } else {
+          showError('计算失败：' + (resp.error || '未知错误'));
+        }
+        return;
+      }
+      suitableTypes = confirmedTypes;
+
+      // Step3: 每种类型跑一次 agent-pack，共享同一个 session_id（计算id）
+      window._recommendHistory = [];
+      window._currentTabIndex  = 0;
+      let firstRenderData = null;
+      let firstAgentData  = null;
+      // sessionId 已在 Step1 之前生成，此处无需重复创建
+
+      const SOFT_TYPES = new Set(['袋子']);
+      for (let i = 0; i < suitableTypes.length; i++) {
+        const type = suitableTypes[i];
+        if (loadingEl) loadingEl.textContent = `计算${type}方案 (${i+1}/${suitableTypes.length})...`;
+        try {
+          // 用户选了软性包材类型时，自动将所有货物标记为允许软包材
+          const isSoftType = SOFT_TYPES.has(type);
+          const sendItems = isSoftType
+            ? items.map(it => ({...it, soft_packaging_ok: true}))
+            : items;
+          const resp = await fetch('/api/agent-pack', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+              items: sendItems, bins: null, user_bins: userBins,
+              preferred_type: isSoftType ? null : type,
+              session_id: sessionId,   // 服务端凭此取 classify_result，不再由前端传入
+              plan_type: type,
+              ai_provider: window._aiProvider || 'anthropic',
+              ai_model:    window._aiModel    || null,
+              // classify_result 及所有 classify 衍生字段已改为服务端 session 缓存，不再前端传入
+              // 本地兜底时仍需传入（服务端无缓存时的降级处理）
+              classify_result: _classifyFromServer ? null : (i === 0 ? classifyResult : null),
+            }),
+          }).then(r => r.json());
+
+          if (resp.success && resp.compare_result) {
+            const label = type + '方案';
+            window._recommendHistory.push({
+              attempt: window._recommendHistory.length + 1,
+              cmpData: resp.compare_result,
+              result_id:  resp.result_id || null,
+              session_id: sessionId,
+              calc_no:    resp.calc_no   || null,
+              plan_no:    resp.plan_no   || null,
+              plan_type:  type,
+              reason: null,
+              label,
+            });
+            // 每个方案结果立即建初始反馈记录，保证后续 PATCH 能找到行
+            if (resp.result_id) {
+              const _cs = resp.compare_result.compare_summary || {};
+              const _wp = (!_cs.winner) ? 'best'
+                        : (_cs.winner === '软包材')    ? 'soft'
+                        : (_cs.winner === '推荐新包材') ? 'rec' : 'best';
+              const _rSku = _wp === 'soft'
+                ? (_cs.soft_bin?.sku || null)
+                : (_cs.best_existing_sku || null);
+              fetch('/api/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  result_id:        resp.result_id,
+                  session_id:       sessionId,
+                  calc_no:          resp.calc_no  || null,
+                  plan_no:          resp.plan_no  || null,
+                  plan_type:        type,
+                  selected_plan:    _wp,
+                  selection_method: 'default',
+                  recommended_bin:  _cs.winner || null,
+                  recommended_sku:  _rSku,
+                  adopted:          null,
+                }),
+              }).catch(e => console.warn('[feedback init]', e));
+            }
+            if (!firstAgentData) {
+              firstAgentData  = resp;
+              window._currentResultId  = resp.result_id || null;
+              window._currentSessionId = sessionId;
+              window._currentCalcNo    = resp.calc_no   || null;
+              window._currentPlanNo    = resp.plan_no   || null;
+              window._currentPlanType  = type;
+              window._currentItems     = items;
+              // 用户选了软性类型且软包材结果存在时，优先用软包材数据渲染3D
+              const softFullResult = resp.compare_result?.soft_full_result;
+              if (isSoftType && softFullResult?.packed_bins?.length) {
+                firstRenderData = softFullResult;
+              } else if (resp.final_result?.packed_bins?.length) {
+                firstRenderData = resp.final_result;
+              } else if (resp.compare_result?.recommended_result?.packed_bins?.length) {
+                firstRenderData = resp.compare_result.recommended_result;
+              } else if (resp.compare_result?.best_full_result?.packed_bins?.length) {
+                firstRenderData = resp.compare_result.best_full_result;
+              }
+            }
+          }
+        } catch (e) {
+          console.error(`[multi-type] ${type} 计算失败:`, e);
+        }
+      }
+
+      if (!firstAgentData) {
+        showError('所有类型方案均计算失败，请检查货物信息');
+        return;
+      }
+
+      // 激活第一个 tab
+      window._currentTabIndex = 0;
+      window._compareResult   = window._recommendHistory[0].cmpData;
+
+      // 渲染对比面板
+      _renderFullComparePanel();
+
+      // 注入分类 banner
+      _injectClassifyBanner(classifyResult);
+
+      // 更新 AI 摘要区
+      if (firstAgentData.agent_summary) {
+        const aiUsed  = !!firstAgentData.ai_used;
+        const elTitle = document.getElementById('ai-summary-title');
+        const elBadge = document.getElementById('ai-summary-badge');
+        const elText  = document.getElementById('ai-summary-text');
+        const elErr   = document.getElementById('ai-error-tip');
+        if (elTitle) elTitle.textContent = aiUsed ? 'AI 分析说明' : '算法计算结果';
+        if (elBadge) elBadge.textContent = aiUsed ? 'AI 驱动' : '本地模式';
+        if (elText)  elText.textContent  = firstAgentData.agent_summary;
+        document.getElementById('ai-summary').className = 'show ' + (aiUsed ? 'ai' : 'local');
+        if (elErr) {
+          if (!aiUsed && firstAgentData.ai_error) {
+            elErr.textContent = '降级原因：' + firstAgentData.ai_error;
+            elErr.style.display = '';
+          } else {
+            elErr.style.display = 'none';
+          }
+        }
+      }
+
+      // 3D 渲染
+      if (firstRenderData) window._renderResult(firstRenderData);
+    }
+
+    // ── 复现历史方案 ──────────────────────────────────────────────────────────
+    async function replayScheme() {
+      _closeSilencePopup();
+      const calcNo = document.getElementById('replay-calc-no').value.trim();
+      if (!calcNo) { alert('请输入计算编号'); return; }
+      const btn = document.getElementById('replay-btn');
+      btn.disabled = true;
+      btn.textContent = '查询中…';
+      try {
+        const res  = await fetch('/api/replay/' + encodeURIComponent(calcNo));
+        const data = await res.json();
+        if (!res.ok) { alert(data.detail || '未找到该计算编号的存档'); return; }
+
+        const plans = data.plans || [data];
+        if (!plans.length) { alert('该计算编号暂无存档数据'); return; }
+
+        // 重置历史，用存档数据填充 tab 系统
+        window._recommendHistory = [];
+        window._hasManualSelection = true;  // 复现模式不触发反馈计时
+        for (const plan of plans) {
+          const pt = plan.plan_type || null;
+          const tabLabel = pt ? `[${pt}] ${plan.plan_no || '方案'}` : (plan.plan_no || '方案');
+          window._recommendHistory.push({
+            attempt:    window._recommendHistory.length + 1,
+            cmpData:    plan.compare_result,
+            result_id:  null,
+            session_id: plan.session_id || null,
+            calc_no:    plan.calc_no,
+            plan_no:    plan.plan_no,
+            plan_type:  pt,
+            reason:     null,
+            label:      tabLabel,
+          });
+        }
+
+        // 激活第一个方案
+        window._currentTabIndex  = 0;
+        const first = window._recommendHistory[0];
+        window._compareResult    = first.cmpData;
+        window._currentCalcNo    = first.calc_no;
+        window._currentPlanNo    = first.plan_no;
+        window._currentSessionId = first.session_id;
+        window._currentResultId  = null;
+
+        // 渲染 3D
+        const fr = plans[0].final_result;
+        if (fr?.packed_bins?.length) window._renderResult(fr);
+
+        // 渲染对比面板
+        _renderFullComparePanel();
+
+        // 回显防护等级分析（取第一个有 classify_result 的方案）
+        const classifyForReplay = plans.find(p => p.classify_result)?.classify_result || null;
+        if (classifyForReplay) _injectClassifyBanner(classifyForReplay);
+
+        // 顶部复现标记条
+        let banner = document.getElementById('replay-banner');
+        const bannerIsNew = !banner;
+        if (!banner) {
+          banner = document.createElement('div');
+          banner.id = 'replay-banner';
+          document.getElementById('viz-panel').prepend(banner);
+        }
+        const ts = plans[0].created_at ? plans[0].created_at.replace('T', ' ').slice(0, 16) : '';
+        banner.innerHTML = `
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0">
+            📂 历史复现 · 编号 <b style="color:#58a6ff">${calcNo}</b>${ts ? ' · ' + ts : ''}
+          </span>
+          <button onclick="document.getElementById('replay-banner').remove();const s=document.getElementById('ai-summary');if(s)s.className='';requestAnimationFrame(()=>window.dispatchEvent(new Event('resize')));"
+            style="background:none;border:none;color:#484f58;cursor:pointer;font-size:16px;line-height:1;flex-shrink:0;margin-left:8px">×</button>`;
+        if (bannerIsNew) requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+
+        // 直接更新 #ai-summary，与正常计算保持一致，无需点击展开
+        const elTitle = document.getElementById('ai-summary-title');
+        const elBadge = document.getElementById('ai-summary-badge');
+        const elText  = document.getElementById('ai-summary-text');
+        const elErr   = document.getElementById('ai-error-tip');
+        if (elTitle) elTitle.textContent = 'AI 分析说明';
+        if (elBadge) elBadge.textContent = 'AI 驱动';
+        if (elText)  elText.textContent  = plans[0].agent_summary || '';
+        if (elErr)   elErr.style.display = 'none';
+        document.getElementById('ai-summary').className = plans[0].agent_summary ? 'show ai' : '';
+      } catch (e) {
+        console.error('[replay]', e);
+        alert('查询失败：' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '复现';
       }
     }
 
     // ── 收集表单数据并调用 API ────────────────────────────────────────────────
     async function calculate() {
+      _closeSilencePopup();
       const rows = document.querySelectorAll('.item-row');
       const items = [];
 
@@ -2407,8 +3410,6 @@
         const sale_price  = salePriceEl ? (parseFloat(salePriceEl.value) || 0) : 0;
         const catEl = row.querySelector('.item-category');
         const product_category = catEl ? catEl.value : '常规类产品';
-        const softOkEl = row.querySelector('.item-soft-ok');
-        const soft_packaging_ok = softOkEl ? softOkEl.checked : false;
 
         if (!length || !width || !height || !weight) {
           showError('请填写所有货物的尺寸和重量');
@@ -2417,8 +3418,9 @@
 
         for (let q = 0; q < qty; q++) {
           items.push({
-            id:     qty > 1 ? `${name}-${q + 1}` : name,
-            length, width, height, weight, sale_price, product_category, soft_packaging_ok,
+            id:            qty > 1 ? `${name}-${q + 1}` : name,
+            product_title: name,
+            length, width, height, weight, sale_price, product_category,
           });
         }
       }
@@ -2464,6 +3466,11 @@
       document.getElementById('calc-btn').disabled = true;
       document.getElementById('ai-summary').className = '';
       document.getElementById('compare-panel').className = '';
+      // 重置选择状态（新一次计算）
+      _clearSilenceTimer();
+      _hasManualSelection = false;
+      _currentViewPlan    = null;
+      window._selectedPlan = null;
 
       // 保存货物原始信息，供3D悬停提示使用
       window._itemMeta = {};
@@ -2476,12 +3483,21 @@
 
         if (aiMode) {
           // AI Agent 模式：始终传 null，让后端全量扫描 8000+ 种包材目录
-          // 用户填写/选择的箱型只在非 AI 模式下生效
-          const agentBins = null;
+          // user_bins 仅用于存档，不参与 AI 计算
+          const userBinsForRecord = bins && bins.length ? bins : null;
+
+          // 货物名称不是默认占位名时，走 AI 分类 + 多类型推荐（传 userBins 用于存档）
+          const anyTitle = items.find(i => i.product_title && !/^货物\d+$/.test(i.product_title))?.product_title || '';
+          if (anyTitle) {
+            await _runMultiTypeFlow(items, userBinsForRecord);
+            return;
+          }
+
           res  = await fetch('/api/agent-pack', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ items, bins: agentBins }),
+            body: JSON.stringify({ items, bins: null, user_bins: userBinsForRecord,
+              ai_provider: window._aiProvider || 'anthropic', ai_model: window._aiModel || null }),
           });
           data = await res.json();
 
@@ -2512,6 +3528,8 @@
             // 新包材对比面板
             if (data.compare_result) {
               window._compareResult = data.compare_result;
+              window._currentResultId = data.result_id || null;
+              window._currentItems = items;
               showComparePanel(data.compare_result);
             }
 
@@ -2589,7 +3607,92 @@
         </div>`;
     }
 
-    function showComparePanel(cmp) {
+    // ── 推荐历史 Tab 系统 ─────────────────────────────────────────────────────
+    window._recommendHistory = [];
+    window._currentTabIndex  = 0;
+
+    function showComparePanel(cmp, label = null) {
+      window._recommendHistory = [{attempt: 1, cmpData: cmp, reason: null, label}];
+      window._currentTabIndex  = 0;
+      window._compareResult    = cmp;
+      _renderFullComparePanel();
+    }
+
+    function appendRecommendHistory(cmp, reason, label = null, calcNo = null, planNo = null, resultId = null, sessionId = null) {
+      const attempt = window._recommendHistory.length + 1;
+      window._recommendHistory.push({
+        attempt, cmpData: cmp, reason, label,
+        calc_no:    calcNo,
+        plan_no:    planNo,
+        result_id:  resultId,
+        session_id: sessionId,
+        plan_type:  null,
+      });
+      window._currentTabIndex  = window._recommendHistory.length - 1;
+      window._currentCalcNo    = calcNo;
+      window._currentPlanNo    = planNo;
+      window._compareResult    = cmp;
+      _renderFullComparePanel();
+    }
+
+    function switchTab(index) {
+      if (index < 0 || index >= window._recommendHistory.length) return;
+      _closeSilencePopup();
+      window._currentTabIndex  = index;
+      window._currentBestRank  = 0;
+      window._compareResult    = window._recommendHistory[index].cmpData;
+      // 切换到对应方案的 result_id，使反馈和3D查看绑定正确的方案
+      window._currentResultId  = window._recommendHistory[index].result_id  || null;
+      window._currentSessionId = window._recommendHistory[index].session_id || null;
+      window._currentCalcNo    = window._recommendHistory[index].calc_no    || null;
+      window._currentPlanNo    = window._recommendHistory[index].plan_no    || null;
+      window._currentPlanType  = window._recommendHistory[index].plan_type  || null;
+      document.querySelectorAll('.rec-tab').forEach((btn, i) => btn.classList.toggle('active', i === index));
+      const isLatest   = index === window._recommendHistory.length - 1;
+      const tabContent = document.getElementById('rec-tab-content');
+      if (tabContent) {
+        tabContent.innerHTML = _buildCompareHTML(window._compareResult, isLatest);
+        // Tab 切换时，基于新 tab 的 winner 更新反馈记录的 selected_plan
+        const s = window._compareResult?.compare_summary || {};
+        const newPlan = _winnerToPlanType(s.winner, s.best_existing_bin);
+        _currentViewPlan = newPlan;
+        _recordSelectionEvent('default', newPlan);
+        // 重置静默计时（若用户未手动选择）
+        if (!_hasManualSelection) {
+          _startSilenceTimer();
+        }
+        // 同步更新 3D 视图为该方案编号对应的当前选中方案
+        switchCompareView(newPlan);
+      }
+    }
+
+    function _renderFullComparePanel() {
+      const panel = document.getElementById('compare-panel');
+      panel.className = 'show';
+      const tabBar = window._recommendHistory.length > 1
+        ? `<div class="rec-tabs">${window._recommendHistory.map((h, i) =>
+            `<button class="rec-tab ${i === window._currentTabIndex ? 'active' : ''}" onclick="switchTab(${i})">
+              ${h.label || ('第' + h.attempt + '次' + (h.reason ? '（' + h.reason + '）' : '推荐'))}
+              ${h.plan_no && h.plan_no !== h.label && !(h.label || '').includes(h.plan_no) ? `<span style="font-size:10px;opacity:0.6;margin-left:4px">${h.plan_no}</span>` : ''}
+            </button>`).join('')}</div>`
+        : '';
+      panel.innerHTML = tabBar + `<div id="rec-tab-content">${_buildCompareHTML(window._compareResult, true)}</div>`;
+      _makeDraggable(panel);
+
+      // 初始化当前视图方案 = winner，发 default 记录，启动静默计时
+      const s = window._compareResult?.compare_summary || {};
+      const winnerPlan = _winnerToPlanType(s.winner, s.best_existing_bin);
+      _currentViewPlan = winnerPlan;
+      if (!_hasManualSelection) {
+        _recordSelectionEvent('default', winnerPlan);
+        _startSilenceTimer();
+      }
+      // 显示优化反馈入口
+      const optBtn = document.getElementById('opt-feedback-btn');
+      if (optBtn) optBtn.classList.add('visible');
+    }
+
+    function _buildCompareHTML(cmp, isLatest = true) {
       const s    = cmp.compare_summary;
       const rec  = s.recommended_result;
       const best = s.best_existing_result;
@@ -2601,117 +3704,138 @@
       const hasBest = cmp.best_full_result     && cmp.best_full_result.packed_bins    && cmp.best_full_result.packed_bins.length;
       const hasSoft = cmp.soft_full_result     && cmp.soft_full_result.packed_bins    && cmp.soft_full_result.packed_bins.length;
 
-      const tierUpgrade = s.tier_upgrade;
-      const tierTip = tierUpgrade
+      const _cn = window._currentCalcNo || null;
+      const _pn = window._currentPlanNo || null;
+      const noLine = (_cn || _pn) ? `
+        <div style="margin:-4px 0 8px;padding:6px 8px;background:#0d1117;border-radius:6px;border:1px solid #21262d">
+          <div style="display:flex;align-items:center;gap:4px;overflow:hidden">
+            <span style="font-size:10px;color:#8b949e;white-space:nowrap;flex-shrink:0">计算编号</span>
+            <span title="${_cn || ''}" style="font-size:11px;color:#e6edf3;font-weight:600;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;user-select:all;cursor:text">${_cn || '—'}</span>
+            <button onclick="navigator.clipboard.writeText('${_cn || ''}').then(()=>{this.textContent='✓';setTimeout(()=>this.textContent='复制',1200)})"
+              style="font-size:10px;padding:1px 5px;border-radius:4px;border:1px solid #30363d;background:transparent;color:#8b949e;cursor:pointer;white-space:nowrap;flex-shrink:0">复制</button>
+          </div>
+          <div style="font-size:10px;color:#484f58;margin-top:2px">可用于复现此方案</div>
+          ${_pn ? `<div style="display:flex;align-items:center;gap:4px;margin-top:5px;padding-top:5px;border-top:1px solid #21262d">
+            <span style="font-size:10px;color:#8b949e;white-space:nowrap;flex-shrink:0">方案编号</span>
+            <span style="font-size:12px;color:#58a6ff;font-weight:600;font-family:monospace;user-select:all;cursor:text">${_pn}</span>
+          </div>` : ''}
+        </div>` : '';
+
+      const tierTip = s.tier_upgrade
         ? `<div style="text-align:center;color:#f0883e;font-size:12px;margin-top:6px">
              ⚡ FBA费档级降低：${(s.existing_fee||{}).tier||''} → ${(s.recommended_fee||{}).tier||''}，强制推荐新包材
            </div>` : '';
 
-      const panel = document.getElementById('compare-panel');
-      panel.className = 'show';
+      // 注意：!rb && !sb 时不再早退出，继续向下渲染 bestCol（含 top3 翻页）
+      // 旧版早退出会导致 recommended_bin=null 时前三优包材无法展示
 
-      if (!rb && !sb) {
-        // 现有箱型已足够好，无需推荐
-        const ef = s.existing_fee;
-        const cpLine = s.best_existing_cost_price != null
-          ? `<div class="compare-col-sub" style="color:#f0883e">成本价 ¥${s.best_existing_cost_price.toFixed(2)}</div>` : '';
-        const skuLine = s.best_existing_sku
-          ? `<div class="compare-col-sub" style="opacity:0.6">SKU: ${s.best_existing_sku}</div>` : '';
-        panel.innerHTML = `
-          <div class="compare-title">📦 包材分析</div>
-          <div style="text-align:center;padding:12px 0">
-            <div style="color:#3fb950;font-size:14px;font-weight:600">已从包材库匹配最优包材</div>
-            <div class="compare-col-sub" style="margin-top:6px">${s.best_existing_bin}</div>
-            ${cpLine}${skuLine}
-            <div class="compare-col-sub">利用率 ${(best.utilization*100).toFixed(1)}%</div>
-            ${_feeBlock(ef, '现有箱型')}
-          </div>`;
-        return;
-      }
+      const isSoftMode = !!s.is_soft_mode;   // 后端标识：当前为软包材路径
+      const winnerType = s.winner === '软包材' ? 'soft' : (s.winner !== s.best_existing_bin ? 'rec' : 'best');
+      window._winnerPlanType = winnerType;
 
-      // 构建对比列 HTML
+      // rec 列标题：软包材路径叫"推荐定制袋"，硬包材路径叫"推荐新包材（硬箱）"
+      const recColTitle = isSoftMode ? '推荐定制袋（尺寸定制）' : '推荐新包材（硬箱）';
+      const recColUnit  = isSoftMode
+        ? `<div class="compare-col-sub">${rb ? rb.length+'×'+rb.width+'×'+rb.height+' cm' : ''}</div>`
+        : `<div class="compare-col-val">${rb ? rb.length+'×'+rb.width+'×'+rb.height : ''}</div>`;
       const recCol = rb ? `
-          <div class="compare-col">
-            <div class="compare-col-title">推荐新包材（硬箱）</div>
-            <div class="compare-col-val">${rb.length}×${rb.width}×${rb.height}</div>
+          <div class="compare-col${winnerType==='rec'?' recommend':''}" id="col-rec">
+            <div class="compare-col-title">${recColTitle}${winnerType==='rec'?'<span class="recommend-tag">AI推荐</span>':''}</div>
+            ${isSoftMode
+              ? `<div class="compare-col-val" style="font-size:13px">定制尺寸 ${rb.length}×${rb.width}×${rb.height} cm</div>`
+              : `<div class="compare-col-val">${rb.length}×${rb.width}×${rb.height}</div>`
+            }
             <div class="compare-col-sub">限重 ${rb.max_weight}kg</div>
             <div class="compare-col-sub" style="color:${rec.all_placed?'#3fb950':'#f85149'}">
-              ${rec.all_placed?'全部装入':'有未装入'} · ${rec.total_bins_used ?? 1} 箱
+              ${rec.all_placed?'全部装入':'有未装入'} · ${rec.total_bins_used ?? 1} ${isSoftMode?'袋':'箱'}
             </div>
             <div class="compare-col-sub">利用率 ${(rec.utilization*100).toFixed(1)}%</div>
             ${_feeBlock(s.recommended_fee, '推荐新包材')}
+            <button class="compare-select-btn${winnerType==='rec'?' recommend':''}" id="btn-select-rec" onclick="selectPlan('rec')">${winnerType==='rec'?'✦ 选定推荐方案':'选定此方案'}</button>
           </div>` : '';
-
+      const _softSkuLine = sb && sb.sku
+        ? `<div class="compare-col-sub" style="opacity:0.6">SKU: ${sb.sku}</div>` : '';
+      const _softCpLine  = sb && sb.cost_price != null
+        ? `<div class="compare-col-sub" style="color:#f0883e">成本价 ¥${Number(sb.cost_price).toFixed(2)}</div>` : '';
       const softCol = (sb && sr) ? `
-          <div class="compare-col">
-            <div class="compare-col-title">软包材方案</div>
-            <div class="compare-col-val">${sb.length}×${sb.width}×${sb.height}</div>
-            <div class="compare-col-sub">限重 ${sb.max_weight}kg</div>
+          <div class="compare-col${winnerType==='soft'?' recommend':''}" id="col-soft">
+            <div class="compare-col-title">软包材方案${winnerType==='soft'?'<span class="recommend-tag">AI推荐</span>':''}</div>
+            <div class="compare-col-val" style="font-size:13px;word-break:break-all">${sb.type || (sb.length+'×'+sb.width+'cm')}</div>
+            <div class="compare-col-sub">${sb.length}×${sb.width}×${sb.height} cm · 限重${sb.max_weight}kg</div>
+            ${_softCpLine}${_softSkuLine}
             <div class="compare-col-sub" style="color:#3fb950">全部装入 · 1 袋</div>
             <div class="compare-col-sub">利用率 ${(sr.utilization*100).toFixed(1)}%</div>
             ${_feeBlock(s.soft_fee, '软包材')}
+            <button class="compare-select-btn${winnerType==='soft'?' recommend':''}" id="btn-select-soft" onclick="selectPlan('soft')">${winnerType==='soft'?'✦ 选定推荐方案':'选定此方案'}</button>
           </div>` : '';
-
-      const _bestCpLine = s.best_existing_cost_price != null
-        ? `<div class="compare-col-sub" style="color:#f0883e">成本价 ¥${s.best_existing_cost_price.toFixed(2)}</div>` : '';
-      const _bestSkuLine = s.best_existing_sku
-        ? `<div class="compare-col-sub" style="opacity:0.6">SKU: ${s.best_existing_sku}</div>` : '';
+      // ── 包材库 top3 翻页 ──────────────────────────────────────────────────────
+      const _top3 = s.top3_existing || [];
+      const _bRank  = Math.min(Math.max(window._currentBestRank || 0, 0), _top3.length > 0 ? _top3.length - 1 : 0);
+      const _bEntry = _top3[_bRank] || null;
+      const _bBinName = _bEntry ? _bEntry.bin_type  : s.best_existing_bin;
+      const _bResult  = _bEntry ? _bEntry.result    : best;
+      const _bFee     = _bEntry ? _bEntry.fee       : s.existing_fee;
+      const _bCp      = (_bEntry != null && _bEntry.cost_price != null) ? _bEntry.cost_price : s.best_existing_cost_price;
+      const _bSku     = _bEntry ? _bEntry.sku       : s.best_existing_sku;
+      const _bIsWinner = winnerType === 'best' && _bRank === 0;
+      const _bestCpLine  = _bCp != null
+        ? `<div class="compare-col-sub" style="color:#f0883e">成本价 ¥${Number(_bCp).toFixed(2)}</div>` : '';
+      const _bestSkuLine = _bSku
+        ? `<div class="compare-col-sub" style="opacity:0.6">SKU: ${_bSku}</div>` : '';
+      // best 列标题：软包材路径叫"包材库最优袋子"，硬包材路径叫"包材库最优箱型"
+      const bestColTitle = isSoftMode ? '包材库最优袋子' : '包材库最优箱型';
+      const _bestPagerHTML = _top3.length > 1
+        ? `<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin:2px 0 4px">
+             <button onclick="switchBestRank(${_bRank - 1})" style="background:none;border:1px solid #444;color:#ccc;border-radius:4px;padding:1px 8px;cursor:pointer${_bRank <= 0 ? ';opacity:0.3;cursor:not-allowed' : ''}">◀</button>
+             <span style="font-size:11px;color:#8b949e">第 ${_bRank + 1} / ${_top3.length} 优</span>
+             <button onclick="switchBestRank(${_bRank + 1})" style="background:none;border:1px solid #444;color:#ccc;border-radius:4px;padding:1px 8px;cursor:pointer${_bRank >= _top3.length - 1 ? ';opacity:0.3;cursor:not-allowed' : ''}">▶</button>
+           </div>` : '';
       const bestCol = `
-          <div class="compare-col">
-            <div class="compare-col-title">包材库最优箱型</div>
-            <div class="compare-col-val">${s.best_existing_bin}</div>
+          <div class="compare-col${_bIsWinner?' recommend':''}" id="col-best">
+            <div class="compare-col-title">${bestColTitle}${_bIsWinner?'<span class="recommend-tag">AI推荐</span>':''}</div>
+            ${_bestPagerHTML}
+            <div class="compare-col-val" style="${isSoftMode?'font-size:13px;word-break:break-all':''}">${_bBinName}</div>
             ${_bestCpLine}${_bestSkuLine}
-            <div class="compare-col-sub" style="color:${best.all_placed?'#3fb950':'#f85149'}">
-              ${best.all_placed?'全部装入':'有未装入'} · ${best.total_bins_used ?? 1} 箱
+            <div class="compare-col-sub" style="color:${_bResult.all_placed?'#3fb950':'#f85149'}">
+              ${_bResult.all_placed?'全部装入':'有未装入'} · ${_bResult.total_bins_used ?? 1} ${isSoftMode?'袋':'箱'}
             </div>
-            <div class="compare-col-sub">利用率 ${(best.utilization*100).toFixed(1)}%</div>
-            ${_feeBlock(s.existing_fee, '现有箱型')}
+            <div class="compare-col-sub">利用率 ${(_bResult.utilization*100).toFixed(1)}%</div>
+            ${_feeBlock(_bFee, isSoftMode?'目录袋':'现有箱型')}
+            <button class="compare-select-btn${_bIsWinner?' recommend':''}" id="btn-select-best" onclick="selectPlan('best')">${_bIsWinner?'✦ 选定推荐方案':'选定此方案'}</button>
           </div>`;
 
-      // 组装对比行（有软包材时三列，否则两列）
       let compareRowInner = '';
-      if (rb && sb) {
-        compareRowInner = recCol + '<div class="compare-divider">vs</div>' + softCol + '<div class="compare-divider">vs</div>' + bestCol;
-      } else if (rb) {
-        compareRowInner = recCol + '<div class="compare-divider">vs</div>' + bestCol;
-      } else {
-        compareRowInner = softCol + '<div class="compare-divider">vs</div>' + bestCol;
-      }
-
-      // 默认激活：优先激活 winner 对应的演示按钮
-      const winnerType = s.winner === '软包材' ? 'soft' : (s.winner !== s.best_existing_bin ? 'rec' : 'best');
-      const recBtn  = rb   ? `<button class="compare-view-btn ${winnerType==='rec'?'active':''}" id="btn-view-rec"
-            onclick="switchCompareView('rec')"
-            ${hasRec ? '' : 'disabled style="opacity:0.4;cursor:not-allowed"'}>
-            ▶ 推荐方案演示
-          </button>` : '';
-      const softBtn = sb   ? `<button class="compare-view-btn ${winnerType==='soft'?'active':''}" id="btn-view-soft"
-            onclick="switchCompareView('soft')"
-            ${hasSoft ? '' : 'disabled style="opacity:0.4;cursor:not-allowed"'}>
-            ▶ 软包材演示
-          </button>` : '';
+      if (rb && sb)       compareRowInner = recCol  + '<div class="compare-divider">vs</div>' + softCol + '<div class="compare-divider">vs</div>' + bestCol;
+      else if (rb && !sb) compareRowInner = recCol  + '<div class="compare-divider">vs</div>' + bestCol;
+      else if (sb && !rb) compareRowInner = softCol + '<div class="compare-divider">vs</div>' + bestCol;
+      else                compareRowInner = bestCol;  // 仅包材库方案（无定制/软包材推荐）
+      const recBtn  = rb ? `<button class="compare-view-btn ${winnerType==='rec'?'active':''}" id="btn-view-rec"
+            onclick="switchCompareView('rec')" ${hasRec?'':'disabled style="opacity:0.4;cursor:not-allowed"'}>▶ 推荐方案演示</button>` : '';
+      const softBtn = sb ? `<button class="compare-view-btn ${winnerType==='soft'?'active':''}" id="btn-view-soft"
+            onclick="switchCompareView('soft')" ${hasSoft?'':'disabled style="opacity:0.4;cursor:not-allowed"'}>▶ 软包材演示</button>` : '';
       const bestBtn = `<button class="compare-view-btn ${winnerType==='best'?'active':''}" id="btn-view-best"
-            onclick="switchCompareView('best')"
-            ${hasBest ? '' : 'disabled style="opacity:0.4;cursor:not-allowed"'}>
-            ▶ 现有方案演示
-          </button>`;
+            onclick="switchCompareView('best')" ${hasBest?'':'disabled style="opacity:0.4;cursor:not-allowed"'}>▶ 现有方案演示</button>`;
 
-      panel.innerHTML = `
-        <div class="compare-title">📦 包材对比分析</div>
+      return `
+        <div class="compare-title">📦 ${(rb || sb) ? '包材对比分析' : '包材库方案'}</div>
+        ${noLine}
         <div class="compare-row">${compareRowInner}</div>
-        ${tierTip}
-        <div style="text-align:center;margin-top:8px">
-          推荐使用：<span class="winner-badge">${s.winner}</span>
-        </div>
-        <div class="compare-actions">
-          ${recBtn}${softBtn}${bestBtn}
-        </div>
-      `;
+        <div class="compare-actions">${recBtn}${softBtn}${bestBtn}</div>
+        <div id="compare-conclusion">
+          ${tierTip}
+          <div style="text-align:center;padding:8px 0">推荐使用：<span class="winner-badge">${s.winner}</span></div>
+          ${_feedbackHTML(true)}
+          <div id="conclusion-blur">选定方案后查看完整推荐结论</div>
+        </div>`;
     }
 
     window.switchCompareView = function(type) {
       const cmp = window._compareResult;
       if (!cmp) return;
+      _closeSilencePopup();
+      if (type !== _currentViewPlan) _silenceShownPlan = null;
+      _currentViewPlan = type;
+      _startSilenceTimer();
 
       const recBtn  = document.getElementById('btn-view-rec');
       const bestBtn = document.getElementById('btn-view-best');
@@ -2731,12 +3855,456 @@
         window._renderResult(result);
         softBtn && softBtn.classList.add('active');
       } else {
-        const result = cmp.best_full_result;
+        const top3Results = cmp.top3_full_results || [];
+        const bRank = window._currentBestRank || 0;
+        const result = top3Results[bRank] || cmp.best_full_result;
         if (!result || !result.packed_bins || !result.packed_bins.length) return;
         window._renderResult(result);
         bestBtn && bestBtn.classList.add('active');
       }
     };
+
+    window.switchBestRank = function(rank) {
+      const top3 = (window._compareResult?.compare_summary?.top3_existing) || [];
+      if (rank < 0 || rank >= top3.length) return;
+      _closeSilencePopup();
+      window._currentBestRank = rank;
+      const isLatest = window._currentTabIndex === window._recommendHistory.length - 1;
+      const tabContent = document.getElementById('rec-tab-content');
+      if (tabContent) {
+        tabContent.innerHTML = _buildCompareHTML(window._compareResult, isLatest);
+      }
+      if (_currentViewPlan === 'best') {
+        switchCompareView('best');
+      }
+    };
+
+    // ── 反馈确认 ──────────────────────────────────────────────────────────────
+
+    function _feedbackHTML(hidden = false) {
+      return `
+        <div class="feedback-section" id="feedback-section"${hidden ? ' style="display:none"' : ''}>
+          <div class="feedback-label" id="feedback-label">📋 实际使用确认（帮助优化推荐准确度）</div>
+          <div class="feedback-btns" id="feedback-btns">
+            <button class="feedback-btn-adopt" id="feedback-btn-adopt" onclick="submitFeedback(true)">✓ 采用推荐方案</button>
+            <button class="feedback-btn-other" onclick="toggleFeedbackChanged()">换了其他包材</button>
+          </div>
+          <div class="feedback-changed" id="feedback-changed">
+            <input type="text" id="feedback-actual-bin" class="feedback-input"
+                   placeholder="实际使用的包材名称或 SKU">
+            <select id="feedback-reason" class="feedback-input" style="cursor:pointer"
+                    onchange="onReasonChange(this.value)">
+              <option value="">换掉原因（可选）</option>
+              <option value="太大">推荐的太大</option>
+              <option value="太小">推荐的太小</option>
+              <option value="没货">推荐的没货</option>
+              <option value="太贵">推荐的太贵</option>
+              <option value="其他">其他原因</option>
+            </select>
+            <input type="text" id="feedback-reason-detail" class="feedback-input"
+                   placeholder="请填写具体原因（必填）"
+                   style="display:none">
+            <button class="feedback-submit" onclick="submitFeedbackChanged()">确认提交</button>
+          </div>
+          <div class="feedback-done" id="feedback-done">✓ 已记录，感谢反馈</div>
+        </div>`;
+    }
+
+    function toggleFeedbackChanged() {
+      const el = document.getElementById('feedback-changed');
+      if (!el) return;
+      el.style.display = el.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // ── 沉默超时模糊逻辑 ─────────────────────────────────────────────────────
+    // ── 静默自动选择逻辑 ──────────────────────────────────────────────────────
+    let _silenceTimer       = null;
+    let _hasManualSelection = false;   // 手动选择后永久禁用静默逻辑
+    let _currentViewPlan    = null;    // 当前正在查看的方案类型 rec/soft/best
+    let _planConfirmed      = false;   // 方案已被确认（手动或静默），再次选择需切换确认
+    let _pendingSwitchTo    = null;    // 等待确认切换的目标方案
+    let _silenceShownPlan   = null;    // 静默确认弹窗已弹过的方案（同方案不重复弹）
+
+    function _winnerToPlanType(winner, bestExistingBin) {
+      if (!winner) return 'best';
+      if (winner === '软包材')   return 'soft';
+      if (winner === '推荐新包材') return 'rec';
+      return 'best';
+    }
+
+    function _startSilenceTimer() {
+      if (_hasManualSelection) return;
+      clearTimeout(_silenceTimer);
+      _silenceTimer = setTimeout(_onSilenceTimeout, 60000);
+    }
+
+    function _clearSilenceTimer() {
+      clearTimeout(_silenceTimer);
+      _silenceTimer = null;
+    }
+
+    function _onSilenceTimeout() {
+      if (_hasManualSelection || !_currentViewPlan || !window._currentResultId) return;
+      if (_silenceShownPlan === _currentViewPlan) return;
+      window._selectedPlan = _currentViewPlan;
+      _recordSelectionEvent('auto', _currentViewPlan);
+      _applySelectionStyle(_currentViewPlan, 'auto');
+      _showSilenceConfirmPopup(_currentViewPlan);
+    }
+
+    function _showSilenceConfirmPopup(planType) {
+      const planNames = { rec: '推荐新包材', soft: '软包材方案', best: '包材库最优箱型' };
+      const popup        = document.getElementById('silence-confirm-popup');
+      const planEl       = document.getElementById('silence-popup-plan');
+      const confirmState = document.getElementById('silence-confirm-state');
+      const reasonState  = document.getElementById('silence-reason-state');
+      const input        = document.getElementById('silence-reason-input');
+      const catSel       = document.getElementById('silence-reason-cat');
+      const errEl        = document.getElementById('silence-reason-error');
+      if (!popup) return;
+      _silenceShownPlan = planType;
+      if (planEl)       planEl.textContent = `当前方案：${planNames[planType] || planType}`;
+      if (confirmState) confirmState.style.display = 'block';
+      if (reasonState)  reasonState.style.display  = 'none';
+      if (input)        { input.value = ''; input.classList.remove('error'); }
+      if (catSel)       { catSel.value = ''; catSel.classList.remove('error'); }
+      if (errEl)        errEl.style.display = 'none';
+      popup.classList.add('show');
+      const panel = document.getElementById('compare-panel');
+      if (panel) panel.style.paddingBottom = '110px';
+    }
+
+    function _closeSilencePopup() {
+      const popup = document.getElementById('silence-confirm-popup');
+      if (popup) popup.classList.remove('show');
+      const panel = document.getElementById('compare-panel');
+      if (panel) panel.style.paddingBottom = '';
+    }
+
+    function _onSilenceConfirmYes() {
+      _planConfirmed = true;   // 静默弹窗点「准确」才算真正确认
+      _closeSilencePopup();
+      const rid = window._currentResultId;
+      if (!rid) return;
+      fetch(`/api/feedback/${rid}`, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ adopted: true }),
+      }).catch(e => console.warn('[silence yes]', e));
+    }
+
+    function _onSilenceConfirmNo() {
+      const confirmState = document.getElementById('silence-confirm-state');
+      const reasonState  = document.getElementById('silence-reason-state');
+      if (confirmState) confirmState.style.display = 'none';
+      if (reasonState)  reasonState.style.display  = 'block';
+      const input = document.getElementById('silence-reason-input');
+      if (input) input.focus();
+    }
+
+    function _backToSilenceConfirm() {
+      const confirmState = document.getElementById('silence-confirm-state');
+      const reasonState  = document.getElementById('silence-reason-state');
+      const input  = document.getElementById('silence-reason-input');
+      const catSel = document.getElementById('silence-reason-cat');
+      const errEl  = document.getElementById('silence-reason-error');
+      if (confirmState) confirmState.style.display = 'block';
+      if (reasonState)  reasonState.style.display  = 'none';
+      if (input)  { input.value = ''; input.classList.remove('error'); }
+      if (catSel) { catSel.value = ''; catSel.classList.remove('error'); }
+      if (errEl)  errEl.style.display = 'none';
+    }
+
+    function _onSilenceReasonSubmit() {
+      const catSel = document.getElementById('silence-reason-cat');
+      const input  = document.getElementById('silence-reason-input');
+      const errEl  = document.getElementById('silence-reason-error');
+      const cat    = catSel ? catSel.value : '';
+      const reason = (input ? input.value : '').trim();
+      let errMsg = '';
+      if (!cat)         errMsg = '请选择不准确的原因类别';
+      else if (!reason) errMsg = '请填写具体描述';
+      if (errMsg) {
+        if (errEl)  { errEl.textContent = errMsg; errEl.style.display = 'block'; }
+        if (!cat && catSel)    catSel.classList.add('error');
+        if (!reason && input)  { input.classList.add('error'); input.focus(); }
+        return;
+      }
+      if (catSel) catSel.classList.remove('error');
+      if (input)  input.classList.remove('error');
+      if (errEl)  errEl.style.display = 'none';
+      _closeSilencePopup();
+      const rid = window._currentResultId;
+      if (!rid) return;
+      fetch(`/api/feedback/${rid}`, {
+        method: 'PATCH',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ adopted: false, reason_changed: cat, reason_detail: reason }),
+      }).catch(e => console.warn('[silence no]', e));
+    }
+
+    function _applySelectionStyle(planType, method) {
+      const winner = window._winnerPlanType;
+      ['rec','soft','best'].forEach(t => {
+        const col = document.getElementById(`col-${t}`);
+        const btn = document.getElementById(`btn-select-${t}`);
+        if (!col) return;
+        col.classList.remove('selected','auto-selected');
+        if (btn) {
+          btn.classList.remove('selected','auto-selected');
+          btn.textContent = (t === winner) ? '✦ 选定推荐方案' : '选定此方案';
+        }
+      });
+      const col = document.getElementById(`col-${planType}`);
+      const btn = document.getElementById(`btn-select-${planType}`);
+      if (method === 'manual') {
+        if (col) col.classList.add('selected');
+        if (btn) { btn.textContent = '✓ 已选定'; btn.classList.add('selected'); }
+      } else if (method === 'auto') {
+        if (col) col.classList.add('auto-selected');
+        if (btn) { btn.textContent = '⏱ 自动选中'; btn.classList.add('auto-selected'); }
+      }
+    }
+
+    function _recordSelectionEvent(method, planType) {
+      if (!window._currentResultId) return;
+      const rid   = window._currentResultId;
+      const s     = (window._compareResult || {}).compare_summary || {};
+      const top3  = s.top3_existing || [];
+      const bRank = window._currentBestRank || 0;
+      const bEntry = top3[bRank] || null;
+      const selectedRank = planType === 'best' ? bRank + 1 : null;
+
+      if (method === 'default') {
+        // 初次创建记录
+        const _recSku = planType === 'soft'
+          ? (s.soft_bin?.sku || null)
+          : planType === 'best'
+            ? (bEntry ? bEntry.sku : s.best_existing_sku) || null
+            : null;
+        const _recBin = planType === 'best'
+          ? (bEntry ? bEntry.bin_type : s.best_existing_bin)
+          : (s.winner || null);
+        fetch('/api/feedback', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            result_id:        rid,
+            session_id:       window._currentSessionId || null,
+            calc_no:          window._currentCalcNo    || null,
+            plan_no:          window._currentPlanNo    || null,
+            plan_type:        window._currentPlanType  || null,
+            selected_plan:    planType,
+            selected_rank:    selectedRank,
+            selection_method: method,
+            recommended_bin:  _recBin,
+            recommended_sku:  _recSku,
+            adopted:          null,
+          }),
+        }).catch(e => console.warn('[selection default]', e));
+      } else {
+        // auto / manual：更新已有记录，同步更新 recommended_bin/sku
+        const _recSku = planType === 'soft'
+          ? (s.soft_bin?.sku || null)
+          : planType === 'best'
+            ? (bEntry ? bEntry.sku : s.best_existing_sku) || null
+            : null;
+        const _recBin = planType === 'best'
+          ? (bEntry ? bEntry.bin_type : s.best_existing_bin)
+          : (s.winner || null);
+        fetch(`/api/feedback/${rid}`, {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            selected_plan:    planType,
+            selected_rank:    selectedRank,
+            selection_method: method,
+            recommended_bin:  _recBin,
+            recommended_sku:  _recSku,
+          }),
+        }).catch(e => console.warn('[selection update]', e));
+      }
+    }
+
+    // 保留 removeBlur 空实现，避免其他地方调用报错
+    function removeBlur() {}
+
+    function selectPlan(planType) {
+      if (_planConfirmed && window._selectedPlan && window._selectedPlan !== planType) {
+        _showPlanSwitchConfirm(window._selectedPlan, planType);
+        return;
+      }
+      _doSelectPlan(planType);
+    }
+
+    function _doSelectPlan(planType) {
+      _closeSilencePopup();
+      _clearSilenceTimer();
+      _hasManualSelection = true;
+      _planConfirmed = false;   // 需点「确认实际使用了」后才算真正确认
+
+      _applySelectionStyle(planType, 'manual');
+      window._selectedPlan = planType;
+      _recordSelectionEvent('manual', planType);
+
+      const planNames = { rec: '推荐新包材', soft: '软包材方案', best: '包材库最优箱型' };
+      const section  = document.getElementById('feedback-section');
+      const label    = document.getElementById('feedback-label');
+      const adoptBtn = document.getElementById('feedback-btn-adopt');
+      const btns     = document.getElementById('feedback-btns');
+      const changed  = document.getElementById('feedback-changed');
+      const done     = document.getElementById('feedback-done');
+
+      if (section) section.style.display = 'block';
+      if (label)   label.textContent = `📋 已选定「${planNames[planType]}」，实际装箱后来确认一下`;
+      if (adoptBtn) adoptBtn.textContent = '✓ 确认实际使用了';
+      if (btns)    btns.style.display   = 'flex';
+      if (changed) changed.style.display = 'none';
+      if (done)    done.style.display    = 'none';
+    }
+
+    function _showPlanSwitchConfirm(fromPlan, toPlan) {
+      _pendingSwitchTo = toPlan;
+      const planNames = { rec: '推荐新包材', soft: '软包材方案', best: '包材库最优箱型' };
+      const msgEl = document.getElementById('plan-switch-msg');
+      const modal = document.getElementById('plan-switch-modal');
+      if (msgEl) msgEl.textContent = `当前已选定「${planNames[fromPlan]}」，确认切换为「${planNames[toPlan]}」？`;
+      if (modal) modal.classList.add('show');
+    }
+
+    function _cancelPlanSwitch() {
+      _pendingSwitchTo = null;
+      const modal = document.getElementById('plan-switch-modal');
+      if (modal) modal.classList.remove('show');
+    }
+
+    function _confirmPlanSwitch() {
+      const toPlan = _pendingSwitchTo;
+      _pendingSwitchTo = null;
+      const modal = document.getElementById('plan-switch-modal');
+      if (modal) modal.classList.remove('show');
+      if (toPlan) _doSelectPlan(toPlan);
+    }
+
+    function openOptFeedback() {
+      const modal = document.getElementById('opt-feedback-modal');
+      if (!modal) return;
+      document.getElementById('opt-fb-cat').value = '';
+      document.getElementById('opt-fb-content').value = '';
+      document.getElementById('opt-fb-content').classList.remove('error');
+      document.getElementById('opt-fb-error').style.display = 'none';
+      document.getElementById('opt-fb-done').style.display = 'none';
+      document.getElementById('opt-fb-form').style.display = 'block';
+      modal.classList.add('show');
+    }
+
+    function closeOptFeedback() {
+      const modal = document.getElementById('opt-feedback-modal');
+      if (modal) modal.classList.remove('show');
+    }
+
+    async function submitOptFeedback() {
+      const catEl     = document.getElementById('opt-fb-cat');
+      const contentEl = document.getElementById('opt-fb-content');
+      const errEl     = document.getElementById('opt-fb-error');
+      const content   = (contentEl ? contentEl.value : '').trim();
+      if (!content) {
+        if (contentEl) contentEl.classList.add('error');
+        if (errEl) { errEl.textContent = '请填写反馈内容'; errEl.style.display = 'block'; }
+        return;
+      }
+      if (contentEl) contentEl.classList.remove('error');
+      if (errEl) errEl.style.display = 'none';
+      const payload = {
+        result_id:   window._currentResultId || null,
+        category:    catEl ? catEl.value || '其他' : '其他',
+        content:     content,
+        operator_id: null,
+      };
+      try {
+        await fetch('/api/optimization-feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        document.getElementById('opt-fb-form').style.display = 'none';
+        document.getElementById('opt-fb-done').style.display = 'block';
+      } catch(e) {
+        if (errEl) { errEl.textContent = '提交失败，请重试'; errEl.style.display = 'block'; }
+      }
+    }
+
+    function onReasonChange(val) {
+      const detailEl = document.getElementById('feedback-reason-detail');
+      if (!detailEl) return;
+      if (val === '其他') {
+        detailEl.style.display = 'block';
+        detailEl.classList.remove('error');
+      } else {
+        detailEl.style.display = 'none';
+        detailEl.value = '';
+        detailEl.classList.remove('error');
+      }
+    }
+
+    async function submitFeedback(adopted, actualUsedBin = null, reason = null, reasonDetail = null) {
+      const rid = window._currentResultId || '';
+      if (!rid) return;
+      if (adopted) _planConfirmed = true;   // 点「确认实际使用了」才算真正确认方案
+      const payload = {
+        adopted:         adopted,
+        actual_used_bin: actualUsedBin,
+        reason_changed:  reason,
+        reason_detail:   reasonDetail,
+      };
+      try {
+        await fetch(`/api/feedback/${rid}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      } catch(e) {
+        console.error('反馈提交失败', e);
+      }
+      const btns    = document.getElementById('feedback-btns');
+      const changed = document.getElementById('feedback-changed');
+      const done    = document.getElementById('feedback-done');
+      if (btns)    btns.style.display    = 'none';
+      if (changed) changed.style.display = 'none';
+      if (done)    done.style.display    = 'block';
+    }
+
+    async function submitFeedbackChanged() {
+      const binEl    = document.getElementById('feedback-actual-bin');
+      const reasonEl = document.getElementById('feedback-reason');
+      const detailEl = document.getElementById('feedback-reason-detail');
+      if (!binEl) return;
+
+      let valid = true;
+
+      const actualBin = binEl.value.trim();
+      if (!actualBin) {
+        binEl.classList.add('error');
+        valid = false;
+      } else {
+        binEl.classList.remove('error');
+      }
+
+      const reason = (reasonEl || {}).value || null;
+      let reasonDetail = null;
+      if (reason === '其他') {
+        reasonDetail = (detailEl || {}).value.trim() || null;
+        if (!reasonDetail) {
+          detailEl && detailEl.classList.add('error');
+          valid = false;
+        } else {
+          detailEl && detailEl.classList.remove('error');
+        }
+      }
+
+      if (!valid) return;
+      await submitFeedback(false, actualBin, reason, reasonDetail);
+    }
 
     // ── 包材库 Modal ──────────────────────────────────────────────────────────
     let _catalogPage = 1;
@@ -2975,9 +4543,6 @@
       const photo = _photos.front || _photos.side || _photos.top;
       if (!photo) { alert('请先拍摄至少一张照片'); return; }
 
-      const apiKey = document.getElementById('tripo-api-key').value.trim();
-      if (!apiKey) { alert('请输入 Tripo3D API Key'); return; }
-
       const btn    = document.getElementById('btn-gen-tripo');
       const status = document.getElementById('gen-3d-status');
       btn.disabled = true;
@@ -2988,10 +4553,11 @@
         const b64 = await _compressToBase64(photo.file);
         status.textContent = '生成3D模型中（约20-60秒）...';
 
+        // api_key 已由服务端统一管理（TRIPO3D_API_KEY），前端不传
         const resp = await fetch('/api/tripo3d/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ image_base64: b64, media_type: 'image/jpeg', api_key: apiKey }),
+          body: JSON.stringify({ image_base64: b64, media_type: 'image/jpeg' }),
         });
         if (!resp.ok) {
           const err = await resp.json();
@@ -3096,9 +4662,7 @@
 
     // ── 初始化：添加3条示例货物 ────────────────────────────────────────────
     loadDemo();
-    // 恢复保存的 API Key
-    const _savedKey = localStorage.getItem('tripoApiKey');
-    if (_savedKey) document.getElementById('tripo-api-key').value = _savedKey;
+    // Tripo3D API Key 已移至服务端管理，不再从 localStorage 恢复
 
     // ══════════════════════════════════════════════════════════════════════
     // 智能包装 Tab 逻辑
@@ -3494,6 +5058,294 @@
       document.getElementById('sp-score-val').textContent   = score + ' / 100';
       document.getElementById('sp-score-fill').style.width  = score + '%';
     }
+
+    // ── 可拖动浮层 ──────────────────────────────────────────────────────────
+    function _ensureDragGrip(el) {
+      if (!el || el.querySelector('.drag-grip')) return;
+      const grip = document.createElement('div');
+      grip.className = 'drag-grip';
+      grip.innerHTML = '&#8942;&#8942;&#8942; 拖动 &#8942;&#8942;&#8942;';
+      el.insertBefore(grip, el.firstChild);
+    }
+
+    function _makeDraggable(el) {
+      if (!el) return;
+      // 每次调用都确保 grip 存在（innerHTML 重置后会丢失，需重新插入）
+      _ensureDragGrip(el);
+      if (el._draggable) return;
+      el._draggable = true;
+      el.classList.add('draggable-panel');
+
+      el.addEventListener('mousedown', function(e) {
+        if (e.target.closest('button, input, select, textarea, a, label')) return;
+        e.preventDefault();
+
+        const container = el.parentElement;
+        const cRect = container.getBoundingClientRect();
+        const eRect = el.getBoundingClientRect();
+
+        // 统一转换为 top/left 坐标系（原始可能是 bottom/right）
+        const topPx  = eRect.top  - cRect.top;
+        const leftPx = eRect.left - cRect.left;
+        el.style.top    = topPx  + 'px';
+        el.style.left   = leftPx + 'px';
+        el.style.bottom = 'auto';
+        el.style.right  = 'auto';
+
+        const startX = e.clientX - leftPx;
+        const startY = e.clientY - topPx;
+        el.classList.add('dragging');
+
+        function onMove(ev) {
+          let newLeft = ev.clientX - startX;
+          let newTop  = ev.clientY - startY;
+          newLeft = Math.max(0, Math.min(newLeft, cRect.width  - el.offsetWidth));
+          newTop  = Math.max(0, Math.min(newTop,  cRect.height - el.offsetHeight));
+          el.style.left = newLeft + 'px';
+          el.style.top  = newTop  + 'px';
+        }
+
+        function onUp() {
+          el.classList.remove('dragging');
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup',   onUp);
+        }
+
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup',   onUp);
+      });
+    }
+
+    // ai-summary 是静态元素，页面加载后立即挂载
+    _makeDraggable(document.getElementById('ai-summary'));
+
+    /* ── 版本公告 & 版本历程 ── */
+    function openAnnounce() {
+      document.getElementById('announce-overlay').classList.remove('hidden');
+    }
+    function closeAnnounce() {
+      document.getElementById('announce-overlay').classList.add('hidden');
+    }
+    function openChangelog() {
+      document.getElementById('changelog-overlay').classList.remove('hidden');
+    }
+    function closeChangelog() {
+      document.getElementById('changelog-overlay').classList.add('hidden');
+    }
+    function openChangelogFromAnnounce() {
+      closeAnnounce();
+      openChangelog();
+    }
+
+    // 点遮罩关闭历程弹窗
+    document.getElementById('changelog-overlay').addEventListener('click', function(e) {
+      if (e.target === this) closeChangelog();
+    });
+
+    // 每次访问自动弹出公告
+    window.addEventListener('DOMContentLoaded', function() {
+      openAnnounce();
+    });
   </script>
+
+  <!-- 静默确认轻弹窗 -->
+  <div id="silence-confirm-popup" class="silence-popup">
+    <div id="silence-confirm-state">
+      <div class="silence-popup-title">⏱ 当前包材方案是否准确？</div>
+      <div id="silence-popup-plan" class="silence-popup-plan"></div>
+      <div class="silence-popup-btns">
+        <button class="silence-btn-no"  onclick="_onSilenceConfirmNo()">✗ 不准确</button>
+        <button class="silence-btn-yes" onclick="_onSilenceConfirmYes()">✓ 准确</button>
+      </div>
+    </div>
+    <div id="silence-reason-state" style="display:none">
+      <div class="silence-popup-title">请描述不准确的原因</div>
+      <select id="silence-reason-cat" class="silence-reason-cat">
+        <option value="">— 选择原因类别（必填）—</option>
+        <option value="箱型偏大">箱型偏大，空间浪费</option>
+        <option value="箱型偏小">箱型偏小，装不下</option>
+        <option value="成本偏高">成本偏高</option>
+        <option value="FBA档位高">FBA档位偏高</option>
+        <option value="包材类型不符">包材类型不符</option>
+        <option value="防护不足">防护不足</option>
+        <option value="其他">其他</option>
+      </select>
+      <textarea id="silence-reason-input" class="silence-reason-input" rows="3"
+        placeholder="请进一步描述（必填）…"></textarea>
+      <div id="silence-reason-error" class="silence-reason-error" style="display:none"></div>
+      <div class="silence-popup-btns">
+        <button class="silence-btn-cancel" onclick="_backToSilenceConfirm()">← 返回</button>
+        <button class="silence-btn-submit" onclick="_onSilenceReasonSubmit()">提交</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI 分类确认弹窗 -->
+  <div id="classify-confirm-modal" class="classify-modal-overlay">
+    <div class="classify-modal">
+      <div class="classify-modal-title">AI 包装类型分析</div>
+      <div id="classify-modal-content"></div>
+      <div class="classify-modal-footer">
+        <button class="classify-skip-btn" onclick="_skipClassify()">跳过，直接推荐</button>
+        <button class="classify-confirm-btn" onclick="_confirmClassify()">确认并计算</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 方案切换确认弹窗 -->
+  <div id="plan-switch-modal" class="plan-switch-overlay">
+    <div class="plan-switch-modal">
+      <div class="plan-switch-title">⚠ 切换已选方案</div>
+      <div id="plan-switch-msg" class="plan-switch-msg"></div>
+      <div class="plan-switch-btns">
+        <button class="plan-switch-cancel"  onclick="_cancelPlanSwitch()">取消</button>
+        <button class="plan-switch-confirm" onclick="_confirmPlanSwitch()">确认切换</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 版本公告弹窗（每次访问自动弹出） -->
+  <div id="announce-overlay" class="vmodal-overlay hidden">
+    <div class="announce-modal">
+      <div class="announce-header">
+        <h2>版本更新</h2>
+        <span class="announce-tag">V1.0.1</span>
+        <span class="announce-date">2026-05-28</span>
+      </div>
+      <div class="announce-body">
+        <div class="announce-section-title">智能推荐</div>
+        <ul>
+          <li>AI 自动识别货物类别，推荐适用包材类型，一次计算输出多种方案并列对比</li>
+          <li>软包材支持从包材库匹配目录袋，AI 辅助选袋，低利用率自动强推定制</li>
+        </ul>
+        <div class="announce-section-title">包材库</div>
+        <ul>
+          <li>拓展包材库，优化包材分类，过滤定制型包材</li>
+          <li>新增防护等级字段，AI分析产品名称后推荐适配的防护等级，支持用户自行更改选择不同防护等级对应的包材类型</li>
+          <li>"最优包材"扩展为前三优翻页展示</li>
+        </ul>
+        <div class="announce-section-title">数据与方案复现</div>
+        <ul>
+          <li>引入可读编号（计算编号 / 方案编号），历史方案可按编号完整复现</li>
+        </ul>
+        <div class="announce-section-title">多模型</div>
+        <ul>
+          <li>新增 DeepSeek V4 Flash / Pro 可选，前端一键切换</li>
+        </ul>
+        <div class="announce-section-title">其他</div>
+        <ul>
+          <li>优化前端页面交互</li>
+        </ul>
+      </div>
+      <div class="announce-footer">
+        <button class="announce-history-link" onclick="openChangelogFromAnnounce()">查看历史版本</button>
+        <button class="announce-close-btn" onclick="closeAnnounce()">知道了</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 版本历程弹窗 -->
+  <div id="changelog-overlay" class="vmodal-overlay hidden">
+    <div class="changelog-modal">
+      <div class="changelog-header">
+        <h2>📋 版本迭代历程</h2>
+        <button class="changelog-close-x" onclick="closeChangelog()">✕</button>
+      </div>
+      <div class="changelog-body">
+
+        <!-- V1.1 -->
+        <div class="cl-version-block">
+          <div class="cl-version-head">
+            <span class="cl-version-num">V1.0.1</span>
+            <span class="cl-date">2026-05-28</span>
+          </div>
+          <div class="cl-section">
+            <div class="cl-section-name">智能推荐</div>
+            <ul>
+              <li>AI 自动识别货物类别，推荐适用包材类型，一次计算输出多种方案并列对比</li>
+              <li>软包材支持从包材库匹配目录袋，AI 辅助选袋，低利用率自动强推定制</li>
+            </ul>
+          </div>
+          <div class="cl-section">
+            <div class="cl-section-name">包材库</div>
+            <ul>
+              <li>拓展包材库，优化包材分类，过滤定制型包材</li>
+              <li>新增防护等级字段，AI分析产品名称后推荐适配的防护等级，支持用户自行更改选择不同防护等级对应的包材类型</li>
+              <li>"最优包材"扩展为前三优翻页展示</li>
+            </ul>
+          </div>
+          <div class="cl-section">
+            <div class="cl-section-name">数据与方案复现</div>
+            <ul>
+              <li>引入可读编号（计算编号 / 方案编号），历史方案可按编号完整复现</li>
+            </ul>
+          </div>
+          <div class="cl-section">
+            <div class="cl-section-name">多模型</div>
+            <ul>
+              <li>新增 DeepSeek V4 Flash / Pro 可选，前端一键切换</li>
+            </ul>
+          </div>
+          <div class="cl-section">
+            <div class="cl-section-name">其他</div>
+            <ul>
+              <li>优化前端页面交互</li>
+            </ul>
+          </div>
+        </div>
+
+        <hr class="cl-divider">
+
+        <!-- V1.0 -->
+        <div class="cl-version-block">
+          <div class="cl-version-head">
+            <span class="cl-version-num">V1.0.0</span>
+            <span class="cl-date">2026-05-08</span>
+          </div>
+          <div class="cl-section">
+            <ul>
+              <li>智能包装推荐系统部署上线试行测试</li>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- 优化反馈浮动入口 -->
+  <button id="opt-feedback-btn" onclick="openOptFeedback()">💬 优化反馈</button>
+
+  <!-- 优化反馈弹窗 -->
+  <div id="opt-feedback-modal" class="opt-feedback-overlay">
+    <div class="opt-feedback-modal">
+      <div class="opt-feedback-title">💬 系统优化反馈</div>
+      <div id="opt-fb-form">
+        <div class="opt-feedback-label">反馈类别</div>
+        <select id="opt-fb-cat" class="opt-feedback-select">
+          <option value="">— 请选择（可选）—</option>
+          <option value="推荐不准确">推荐不准确</option>
+          <option value="AI分类有误">AI分类有误</option>
+          <option value="尺寸/重量问题">尺寸/重量问题</option>
+          <option value="包材库问题">包材库问题</option>
+          <option value="操作体验">操作体验问题</option>
+          <option value="其他">其他</option>
+        </select>
+        <div class="opt-feedback-label">反馈内容（必填）</div>
+        <textarea id="opt-fb-content" class="opt-feedback-textarea"
+          placeholder="请描述您发现的问题或改进建议…"></textarea>
+        <div id="opt-fb-error" class="opt-feedback-error" style="display:none"></div>
+        <div class="opt-feedback-btns">
+          <button class="opt-fb-cancel" onclick="closeOptFeedback()">取消</button>
+          <button class="opt-fb-submit" onclick="submitOptFeedback()">提交反馈</button>
+        </div>
+      </div>
+      <div id="opt-fb-done" class="opt-fb-done" style="display:none">
+        ✅ 反馈已提交，感谢您的建议！
+        <br><br>
+        <button class="opt-fb-cancel" onclick="closeOptFeedback()">关闭</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

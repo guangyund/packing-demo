@@ -469,7 +469,14 @@ def _pack_bin(items: list, bin_data: dict,
     def _settle(placed):
         settled = _settle_gravity(placed) if ENABLE_GRAVITY_SETTLING else placed
         settled = _settle_horizontal(settled)
-        return _sort_layers_by_coverage(settled, bin_height=bin_data["height"])
+        # 层排序：底部面积最大（仅调整 z 顺序，不改变 xy）
+        settled = _sort_layers_by_coverage(settled, bin_height=bin_data["height"])
+        # 层排序后再做一次重力沉降：层排序可能因"层内存在不同高度货物"
+        # 而产生镂空（某层 max_h 较高，但被 max_h 较矮的货物上放的货物，
+        # 层排序后落点被抬高了），重新沉降把这些空隙填回来。
+        if ENABLE_GRAVITY_SETTLING:
+            settled = _settle_gravity(settled)
+        return settled
 
     # 贪心已装完所有货物时，直接返回贪心结果
     # OR-Tools 此时只会重排位置，反而可能打乱整齐的分层结构，无需再跑
