@@ -31,7 +31,7 @@ git checkout "$TARGET"
 
 # ── 安装/更新依赖 ────────────────────────────────────────────
 echo "📥 更新 Python 依赖..."
-pip install -r requirements.txt -q
+venv/bin/pip install -r requirements.txt -q
 
 # ── 重启服务 ────────────────────────────────────────────────
 echo "🔄 重启服务 $SERVICE_NAME ..."

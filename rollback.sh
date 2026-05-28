@@ -45,7 +45,7 @@ git checkout "$TARGET"
 
 # ── 还原依赖 ────────────────────────────────────────────────
 echo "📥 还原 Python 依赖..."
-pip install -r requirements.txt -q
+venv/bin/pip install -r requirements.txt -q
 
 # ── 重启服务 ────────────────────────────────────────────────
 echo "🔄 重启服务 $SERVICE_NAME ..."
