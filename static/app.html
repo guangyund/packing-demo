@@ -3084,6 +3084,30 @@
       panel.insertAdjacentHTML('afterbegin', banner);
     }
 
+    // navigator.clipboard 在 HTTP 环境下不可用，降级用 execCommand
+    function _copyText(text, btn) {
+      const done = () => {
+        const prev = btn.textContent;
+        btn.textContent = '✓';
+        setTimeout(() => btn.textContent = prev, 1200);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => _copyFallback(text, done));
+      } else {
+        _copyFallback(text, done);
+      }
+    }
+    function _copyFallback(text, cb) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;opacity:0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch(e) {}
+      document.body.removeChild(ta);
+      if (cb) cb();
+    }
+
     // crypto.randomUUID 在 HTTP 环境下不可用，降级用 Math.random 实现
     function _generateUUID() {
       if (typeof crypto !== 'undefined' && crypto.randomUUID) {
@@ -3722,7 +3746,7 @@
           <div style="display:flex;align-items:center;gap:4px;overflow:hidden">
             <span style="font-size:10px;color:#8b949e;white-space:nowrap;flex-shrink:0">计算编号</span>
             <span title="${_cn || ''}" style="font-size:11px;color:#e6edf3;font-weight:600;font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;user-select:all;cursor:text">${_cn || '—'}</span>
-            <button onclick="navigator.clipboard.writeText('${_cn || ''}').then(()=>{this.textContent='✓';setTimeout(()=>this.textContent='复制',1200)})"
+            <button onclick="_copyText('${_cn || ''}',this)"
               style="font-size:10px;padding:1px 5px;border-radius:4px;border:1px solid #30363d;background:transparent;color:#8b949e;cursor:pointer;white-space:nowrap;flex-shrink:0">复制</button>
           </div>
           <div style="font-size:10px;color:#484f58;margin-top:2px">可用于复现此方案</div>
