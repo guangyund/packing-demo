@@ -1083,6 +1083,37 @@ def _do_recommend_and_compare(items: list, bins: list = None,
     product_category = next((i.get("product_category", "常规类产品") for i in items
                              if i.get("product_category")), "常规类产品")
 
+    # ── 体积预筛：贪心扫描前用纯数学快速过滤，将候选箱型从150缩到~25 ─────────────
+    # 贪心扫描是 O(n²×箱型数)，箱型数越少越快；纯体积排名 O(箱型数)，毫秒级。
+    _SCAN_LIMIT = 25
+    if len(available) > _SCAN_LIMIT:
+        _total_vol = sum(i["length"] * i["width"] * i["height"] for i in items)
+        # 最大单件三边从小到大排序，用于判断箱子能否放下最大件
+        _max_dims_sorted = sorted([
+            max(i["length"] for i in items),
+            max(i["width"]  for i in items),
+            max(i["height"] for i in items),
+        ])
+        _vol_pre = []
+        for b in available:
+            bvol = b["length"] * b["width"] * b["height"]
+            if bvol <= 0:
+                continue
+            # 任意旋转后最大件能否装入：双方三边各自排序后逐一比较
+            b_sorted = sorted([b["length"], b["width"], b["height"]])
+            if any(d > bd for d, bd in zip(_max_dims_sorted, b_sorted)):
+                continue  # 连最大单件都放不下，直接跳过
+            bwt   = b.get("max_weight", MAX_BIN_WEIGHT)
+            n_vol = math.ceil(_total_vol / (bvol * 0.65))
+            n_wt  = math.ceil(total_weight_kg / bwt) if bwt > 0 else 9999
+            n_est = max(n_vol, n_wt, 1)
+            util  = _total_vol / (bvol * n_est)
+            _vol_pre.append((-n_est * 1000 + util * 100, b))
+        _vol_pre.sort(key=lambda x: x[0], reverse=True)
+        _before = len(available)
+        available = [b for _, b in _vol_pre[:_SCAN_LIMIT]]
+        logger.info("[recommend] 体积预筛: %d → %d 个候选箱型", _before, len(available))
+
     # ── 第一步：扫描现有箱型，找出前3优（贪心快速评分，不运行 OR-Tools）────────────
     # scan_mode=True：跳过 OR-Tools，仅用贪心算法给每个箱型打分（< 100ms/箱型）。
     # 扫完全部候选取评分前3，再对各自跑完整 OR-Tools 取精确坐标用于 3D 展示。
