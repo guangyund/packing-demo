@@ -3150,6 +3150,10 @@
 
     async function _runMultiTypeFlow(items, userBins = null) {
       _closeSilencePopup();
+      if (items.length > 200) {
+        alert(`当前货物数量 ${items.length} 件，超过系统上限 200 件，请拆分后分批提交。`);
+        return;
+      }
       const productTitle = items.find(i => i.product_title && !/^货物\d+$/.test(i.product_title))?.product_title || '';
       const productCat   = items.find(i => i.product_category)?.product_category || '常规类产品';
 

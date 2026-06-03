@@ -1115,11 +1115,9 @@ def _do_recommend_and_compare(items: list, bins: list = None,
     _scan_sale_price   = max((i.get("sale_price", 0) for i in items), default=0)
     _scan_category     = next((i.get("product_category", "常规类产品") for i in items
                                if i.get("product_category")), "常规类产品")
-    # 货物数量过多时跳过 OR-Tools，用 scan_mode 结果代替（3D 坐标不精确，但推荐结果可用）
-    _large_batch = len(items) > 200
     top3_entries = []  # list of {"bin_data", "bin_result", "full", "fee"}
     for _, bd, br in _top3:
-        _full = calculate_packing(items, [bd] * max_copies, scan_mode=_large_batch)
+        _full = calculate_packing(items, [bd] * max_copies)
         try:
             _fee = calc_bin_fee(bd, _scan_total_weight, _scan_sale_price, _scan_category)
         except Exception:
@@ -1153,7 +1151,7 @@ def _do_recommend_and_compare(items: list, bins: list = None,
         ai_provider=ai_provider, ai_model=ai_model,
     )
     rec_bin    = _calc_recommended_bin(items, size_buffer=_ai_buffer)
-    rec_result = calculate_packing(items, [rec_bin] * max_copies, scan_mode=_large_batch)
+    rec_result = calculate_packing(items, [rec_bin] * max_copies)
 
     rec_util      = rec_result["summary"]["avg_utilization"]
     rec_placed    = rec_result["summary"]["all_placed"]
@@ -1928,13 +1926,8 @@ def run_packing_agent(items: list, bins: list = None, constraints: dict = None,
     _total_input_tokens   = 0
     _total_output_tokens  = 0
 
-    # 大单量直接走本地，避免长时间占用服务器资源
-    if len(items) > 200:
-        logger.info("[Agent] 货物数 %d > 200，跳过 AI agent loop，直接本地推荐", len(items))
-        ai_error = f"货物数 {len(items)} 超过阈值 200，跳过 AI"
-
     try:
-        for turn in ([] if ai_error else range(10)):  # 大单量跳过时 ai_error 已设，直接空转
+        for turn in range(10):          # 最多 10 轮，防止无限循环
             # 还没拿到计算结果前强制调用工具，防止 Claude 只输出文字就结束
             tool_choice = {"type": "any"} if final_result is None else {"type": "auto"}
             logger.info("[Agent 第%d轮] tool_choice=%s", turn + 1, tool_choice["type"])
