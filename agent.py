@@ -1116,10 +1116,19 @@ def _do_recommend_and_compare(items: list, bins: list = None,
 
     # ── 第一步：扫描现有箱型，找出前3优（贪心快速评分，不运行 OR-Tools）────────────
     # scan_mode=True：跳过 OR-Tools，仅用贪心算法给每个箱型打分（< 100ms/箱型）。
-    # 扫完全部候选取评分前3，再对各自跑完整 OR-Tools 取精确坐标用于 3D 展示。
+    # 货物超 50 件时用体积分层抽样（50件），让贪心打分保持 O(50²) 而非 O(n²)。
+    # 抽样：按体积排序后均匀抽取，保留大中小件的代表性分布。
+    _SCAN_SAMPLE = 50
+    if len(items) > _SCAN_SAMPLE:
+        _sorted_by_vol = sorted(items, key=lambda i: i["length"] * i["width"] * i["height"], reverse=True)
+        _step   = len(_sorted_by_vol) / _SCAN_SAMPLE
+        _scan_items = [_sorted_by_vol[int(k * _step)] for k in range(_SCAN_SAMPLE)]
+    else:
+        _scan_items = items
+
     _scored_bins = []
     for bin_data in available:
-        result     = calculate_packing(items, [bin_data] * max_copies, scan_mode=True)
+        result     = calculate_packing(_scan_items, [bin_data] * len(_scan_items), scan_mode=True)
         all_placed = result["summary"]["all_placed"]
         util       = result["summary"]["avg_utilization"]
         num_bins   = result["summary"]["total_bins_used"]
