@@ -1115,9 +1115,11 @@ def _do_recommend_and_compare(items: list, bins: list = None,
     _scan_sale_price   = max((i.get("sale_price", 0) for i in items), default=0)
     _scan_category     = next((i.get("product_category", "常规类产品") for i in items
                                if i.get("product_category")), "常规类产品")
+    # 货物数量过多时跳过 OR-Tools，用 scan_mode 结果代替（3D 坐标不精确，但推荐结果可用）
+    _large_batch = len(items) > 200
     top3_entries = []  # list of {"bin_data", "bin_result", "full", "fee"}
     for _, bd, br in _top3:
-        _full = calculate_packing(items, [bd] * max_copies)
+        _full = calculate_packing(items, [bd] * max_copies, scan_mode=_large_batch)
         try:
             _fee = calc_bin_fee(bd, _scan_total_weight, _scan_sale_price, _scan_category)
         except Exception:
@@ -1151,7 +1153,7 @@ def _do_recommend_and_compare(items: list, bins: list = None,
         ai_provider=ai_provider, ai_model=ai_model,
     )
     rec_bin    = _calc_recommended_bin(items, size_buffer=_ai_buffer)
-    rec_result = calculate_packing(items, [rec_bin] * max_copies)
+    rec_result = calculate_packing(items, [rec_bin] * max_copies, scan_mode=_large_batch)
 
     rec_util      = rec_result["summary"]["avg_utilization"]
     rec_placed    = rec_result["summary"]["all_placed"]
