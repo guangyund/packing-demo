@@ -1555,7 +1555,7 @@ def _api_with_retry(max_retries: int = 3, _provider: str = "anthropic", _ds_clie
     if _provider == "anthropic":
         for attempt in range(max_retries):
             try:
-                return client.messages.create(**kwargs)
+                return client.messages.create(**kwargs, timeout=300)
             except (anthropic.RateLimitError, anthropic.InternalServerError) as e:
                 status = getattr(e, "status_code", 0)
                 retryable = status in (429, 529)
@@ -1597,7 +1597,7 @@ def _api_with_retry(max_retries: int = 3, _provider: str = "anthropic", _ds_clie
             call_kw["tool_choice"] = oai_tc
         for attempt in range(max_retries):
             try:
-                resp = ds.chat.completions.create(**call_kw)
+                resp = ds.chat.completions.create(**call_kw, timeout=300)
                 return _from_oai_resp(resp)
             except _openai.RateLimitError as e:
                 if attempt < max_retries - 1:
@@ -1926,8 +1926,13 @@ def run_packing_agent(items: list, bins: list = None, constraints: dict = None,
     _total_input_tokens   = 0
     _total_output_tokens  = 0
 
+    # 大单量直接走本地，避免长时间占用服务器资源
+    if len(items) > 200:
+        logger.info("[Agent] 货物数 %d > 200，跳过 AI agent loop，直接本地推荐", len(items))
+        ai_error = f"货物数 {len(items)} 超过阈值 200，跳过 AI"
+
     try:
-        for turn in range(10):          # 最多 10 轮，防止无限循环
+        for turn in ([] if ai_error else range(10)):  # 大单量跳过时 ai_error 已设，直接空转
             # 还没拿到计算结果前强制调用工具，防止 Claude 只输出文字就结束
             tool_choice = {"type": "any"} if final_result is None else {"type": "auto"}
             logger.info("[Agent 第%d轮] tool_choice=%s", turn + 1, tool_choice["type"])
