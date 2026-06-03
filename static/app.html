@@ -1639,6 +1639,11 @@
                 <div class="model-name">DeepSeek V4 Pro</div>
                 <div class="model-desc">深度推理·高精度</div>
               </div>
+              <div class="ai-model-btn" id="ai-model-btn-qwen3.6-plus"
+                   onclick="selectAiModel('qwen','qwen3.6-plus','qwen3.6-plus')">
+                <div class="model-name">Qwen3.6 Plus</div>
+                <div class="model-desc">通义千问·试用</div>
+              </div>
             </div>
           </div>
 
@@ -2981,6 +2986,7 @@
           'claude-haiku-4-5-20251001': '由 Claude Haiku 自动分析并选择最优箱型',
           'deepseek-v4-flash':         '由 DeepSeek V4 Flash 自动分析并选择最优箱型',
           'deepseek-v4-pro':           '由 DeepSeek V4 Pro 自动分析并选择最优箱型',
+          'qwen3.6-plus':              '由 通义千问 Qwen3.6 Plus 自动分析并选择最优箱型',
         };
         sub.textContent = labels[model] || '由 AI 自动分析并选择最优箱型';
       }

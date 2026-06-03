@@ -53,6 +53,12 @@ def _get_ds_client():
         base_url = "https://api.deepseek.com",
     )
 
+def _get_qwen_client():
+    return _openai.OpenAI(
+        api_key  = _os.environ.get("DASHSCOPE_API_KEY", ""),
+        base_url = "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    )
+
 def _to_oai_tools(tools: list) -> list:
     """Claude tools → OpenAI function-calling 格式"""
     return [
@@ -467,7 +473,7 @@ def _ai_decide_bin_buffer(items: list, classify_result: dict = None,
     )
     # 使用用户选定的模型，未指定时降级到默认快速模型
     _fast_model = (ai_model or "claude-haiku-4-5-20251001") if ai_provider == "anthropic" \
-                  else (ai_model or "deepseek-v4-flash")
+                  else (ai_model or ("qwen3.6-plus" if ai_provider == "qwen" else "deepseek-v4-flash"))
     try:
         resp = _api_with_retry(
             _provider=ai_provider, model=_fast_model, max_tokens=8,
@@ -511,7 +517,7 @@ def _ai_decide_soft_params(items: list, classify_result: dict = None,
     )
     # 使用用户选定的模型，未指定时降级到默认快速模型
     _fast_model = (ai_model or "claude-haiku-4-5-20251001") if ai_provider == "anthropic" \
-                  else (ai_model or "deepseek-v4-flash")
+                  else (ai_model or ("qwen3.6-plus" if ai_provider == "qwen" else "deepseek-v4-flash"))
     try:
         resp = _api_with_retry(
             _provider=ai_provider, model=_fast_model, max_tokens=16,
@@ -597,7 +603,7 @@ def _ai_select_winner(items: list, candidates: list, classify_result: dict = Non
     candidates = filtered   # AI 只看过滤后的候选
     # 使用用户选定的模型，未指定时降级到默认快速模型
     _fast_model = (ai_model or "claude-haiku-4-5-20251001") if ai_provider == "anthropic" \
-                  else (ai_model or "deepseek-v4-flash")
+                  else (ai_model or ("qwen3.6-plus" if ai_provider == "qwen" else "deepseek-v4-flash"))
     try:
         resp = _api_with_retry(
             _provider=ai_provider, model=_fast_model, max_tokens=8,
@@ -651,7 +657,7 @@ TOOLS = [
             "properties": {
                 "items": {
                     "type": "array",
-                    "description": "完整货物列表",
+                    "description": "货物列表（可省略，系统已有货物数据，无需重复传入）",
                     "items": {
                         "type": "object",
                         "properties": {
@@ -683,7 +689,7 @@ TOOLS = [
                     "description": "包材成本上限（元），超出此价格的包材不纳入候选。",
                 },
             },
-            "required": ["items"],
+            "required": [],
         },
     },
 ]
@@ -1495,13 +1501,15 @@ def execute_tool(tool_name: str, tool_input: dict, bins: list = None,
         return json.dumps(summary, ensure_ascii=False), full, None
 
     if tool_name == "recommend_and_compare":
-        # 还原 soft_packaging_ok（Claude 工具调用时可能丢失该字段）
+        # AI 无需传 items，直接用上下文中的 original_items；若 AI 仍传了则优先用（兼容旧调用）
+        _items = tool_input.get("items") or original_items or []
+        # 还原 soft_packaging_ok（AI 工具调用时可能丢失该字段）
         if original_items:
             _orig_map = {i["id"]: i.get("soft_packaging_ok", False) for i in original_items}
-            for item in tool_input["items"]:
+            for item in _items:
                 if _orig_map.get(item.get("id", ""), False):
                     item["soft_packaging_ok"] = True
-        # 提取 Claude 传入的约束参数，重新筛选候选包材
+        # 提取 AI 传入的约束参数，重新筛选候选包材
         tool_preferred  = tool_input.get("preferred_type")
         tool_tight      = tool_input.get("require_tight", False)
         tool_excl       = set(tool_input.get("excluded_skus") or [])
@@ -1510,7 +1518,7 @@ def execute_tool(tool_name: str, tool_input: dict, bins: list = None,
 
         if has_constraints and _RAW_CATALOG:
             effective_bins = _prefilter_catalog_bins(
-                tool_input["items"],
+                _items,
                 excluded_skus=tool_excl,
                 max_cost=tool_max_cost,
                 preferred_type=tool_preferred,
@@ -1523,7 +1531,7 @@ def execute_tool(tool_name: str, tool_input: dict, bins: list = None,
             effective_bins = bins
 
         agent_str, full_compare, primary_result = _do_recommend_and_compare(
-            tool_input["items"], bins=effective_bins,
+            _items, bins=effective_bins,
             ai_provider=ai_provider, ai_model=ai_model,
             min_protection_rank=min_protection_rank,
             classify_result=classify_result,
@@ -1559,23 +1567,31 @@ def _api_with_retry(max_retries: int = 3, _provider: str = "anthropic", _ds_clie
                 else:
                     raise
     else:
-        ds = _ds_client or _get_ds_client()
+        if _provider == "qwen":
+            ds = _ds_client or _get_qwen_client()
+        else:
+            ds = _ds_client or _get_ds_client()
         system   = kwargs.pop("system", None)
         messages = kwargs.pop("messages", [])
         tools    = kwargs.pop("tools", None)
         tc       = kwargs.pop("tool_choice", None)
-        model    = kwargs.pop("model", "deepseek-v4-flash")
+        _default_model = "qwen3.6-plus" if _provider == "qwen" else "deepseek-v4-flash"
+        model    = kwargs.pop("model", _default_model)
         max_tok  = kwargs.pop("max_tokens", 4096)
         oai_messages = _to_oai_messages(messages, system)
         oai_tools    = _to_oai_tools(tools) if tools else None
         oai_tc = "required" if (isinstance(tc, dict) and tc.get("type") == "any") else "auto"
         # 推理模型限制：① 需要更大的 token 预算；② 不支持 tool_choice=required
-        _REASONING_MODELS = {"deepseek-v4-pro", "deepseek-v4-flash"}
+        _REASONING_MODELS = {"deepseek-v4-pro", "deepseek-v4-flash", "qwen3.6-plus"}
         if model in _REASONING_MODELS:
-            max_tok = max(max_tok, 8192)
+            max_tok = max(max_tok, 16384)
             if oai_tc == "required":
                 oai_tc = "auto"
         call_kw: dict = {"model": model, "messages": oai_messages, "max_tokens": max_tok}
+        # Qwen3 默认开启 thinking 模式，对结构化输出任务会产生大量无用推理 token，
+        # 导致响应超时。统一关掉，让它像普通模型一样快速返回。
+        if _provider == "qwen" and model in _REASONING_MODELS:
+            call_kw["extra_body"] = {"enable_thinking": False}
         if oai_tools:
             call_kw["tools"]       = oai_tools
             call_kw["tool_choice"] = oai_tc
@@ -1717,6 +1733,9 @@ def classify_for_packaging(product_title: str, product_category: str = "常规�
     if ai_provider == "anthropic":
         model          = ai_model or "claude-haiku-4-5-20251001"
         provider_label = "Anthropic"
+    elif ai_provider == "qwen":
+        model          = ai_model or "qwen3.6-plus"
+        provider_label = "通义千问"
     else:
         model          = ai_model or "deepseek-v4-flash"
         provider_label = "DeepSeek"
@@ -1807,7 +1826,7 @@ def run_packing_agent(items: list, bins: list = None, constraints: dict = None,
         _smeta_model = _smeta.get("model")
         if _smeta_model:
             _sai_model    = _smeta_model
-            _sai_provider = "Anthropic" if ai_provider == "anthropic" else "DeepSeek"
+            _sai_provider = "Anthropic" if ai_provider == "anthropic" else ("通义千问" if ai_provider == "qwen" else "DeepSeek")
         elif ai_provider == "anthropic":
             _sai_model, _sai_provider = "claude-haiku-4-5-20251001", "Anthropic"
         else:
@@ -1898,6 +1917,9 @@ def run_packing_agent(items: list, bins: list = None, constraints: dict = None,
     if ai_provider == "anthropic":
         _ai_model    = ai_model or "claude-haiku-4-5-20251001"
         _ai_provider = "Anthropic"
+    elif ai_provider == "qwen":
+        _ai_model    = ai_model or "qwen3.6-plus"
+        _ai_provider = "通义千问"
     else:
         _ai_model    = ai_model or "deepseek-v4-flash"
         _ai_provider = "DeepSeek"
