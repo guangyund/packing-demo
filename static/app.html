@@ -1572,669 +1572,373 @@
       border: none; border-top: 1px solid #21262d; margin: 20px 0;
     }
 
-    /* ══════════════════════════════════════════════
-       亮色主题覆盖  [data-theme="light"]
-       所有暗色硬编码值 → 亮色映射
-       颜色映射：
-         #0d1117 → #f6f8fa
-         #161b22 → #ffffff
-         #21262d → #d0d7de
-         #30363d → #d8dee4
-         #e6edf3 → #1f2328
-         #c9d1d9 → #24292f
-         #8b949e → #57606a
-         #484f58 → #8c959f
-         #6e7681 → #6e7781
-         #58a6ff → #0969da
-         #1f6feb → #0969da
-         #388bfd → #0550ae
-         #79c0ff → #0969da
-         #3fb950 → #1a7f37
-         #f0883e → #953800
-         #f85149 → #cf222e
-         #1f3a5a → #ddf4ff
-       ══════════════════════════════════════════════ */
+    /* ════════════════════════════════════════════════════════════
+       亮色主题  [data-theme="light"]
+       配色系统：冷蓝灰柔和调色板 (Slate系)
+       所有元素共享同一蓝灰色系，整体统一协调
+       ════════════════════════════════════════════════════════════ */
 
-    /* 全局 */
-    [data-theme="light"] body {
-      background: #f6f8fa;
-      color: #1f2328;
-    }
+    /* ── 全局 ── */
+    [data-theme="light"] body { background: #eef2f7; color: #1e2a3b; }
 
-    /* 顶栏 */
-    [data-theme="light"] header {
-      background: #ffffff;
-      border-bottom: 1px solid #d0d7de;
-    }
-    [data-theme="light"] header h1 { color: #0969da; }
-    [data-theme="light"] header span { color: #8c959f; }
+    /* ── 顶栏 ── */
+    [data-theme="light"] header { background: #f8fafd; border-bottom: 1px solid #dde4ed; }
+    [data-theme="light"] header h1 { color: #2563eb; }
+    [data-theme="light"] header span { color: #8896a9; }
+    [data-theme="light"] .version-badge { background: #e8edf5; color: #5d6a7e; border-color: #dde4ed; }
+    [data-theme="light"] .version-log-btn { color: #5d6a7e; border-color: #dde4ed; background: transparent; }
+    [data-theme="light"] .version-log-btn:hover { color: #2563eb; border-color: #2563eb; }
+    [data-theme="light"] #theme-toggle-btn { border-color: rgba(93,106,126,0.3) !important; }
 
-    /* 版本标签 & 历程按钮 */
-    [data-theme="light"] .version-badge {
-      color: #1a7f37;
-      background: rgba(26,127,55,0.1);
-      border: 1px solid rgba(26,127,55,0.3);
-    }
-    [data-theme="light"] .version-log-btn { color: #57606a; }
-    [data-theme="light"] .version-log-btn:hover { color: #0969da; }
-
-    /* 主题切换按钮 */
-    [data-theme="light"] #theme-toggle-btn {
-      background: rgba(0,0,0,0.06);
-      border: 1px solid #d0d7de;
-      color: #1f2328;
-    }
-    [data-theme="light"] #theme-toggle-btn:hover {
-      background: rgba(0,0,0,0.12);
-    }
-
-    /* 左侧输入面板 */
-    [data-theme="light"] #input-panel {
-      background: #ffffff;
-      border-right: 1px solid #d0d7de;
-    }
-    [data-theme="light"] #input-scroll::-webkit-scrollbar-thumb { background: #d8dee4; }
-
-    /* section-title */
-    [data-theme="light"] .section-title { color: #57606a; }
+    /* ── 左侧面板 ── */
+    [data-theme="light"] #input-panel { background: #f8fafd; border-right: 1px solid #dde4ed; }
+    [data-theme="light"] #input-scroll::-webkit-scrollbar-thumb { background: #c8d3e0; }
+    [data-theme="light"] .section-title { color: #8896a9; }
 
     /* 货物行 */
-    [data-theme="light"] .item-row {
-      background: #f6f8fa;
-      border: 1px solid #d0d7de;
-    }
-    [data-theme="light"] .item-name-input { color: #1f2328; }
-    [data-theme="light"] .item-name-input::placeholder { color: #8c959f; }
-    [data-theme="light"] .delete-btn { color: #8c959f; }
-    [data-theme="light"] .delete-btn:hover { color: #cf222e; }
+    [data-theme="light"] .item-row { background: #eef2f7; border: 1px solid #dde4ed; }
+    [data-theme="light"] .item-name-input { color: #1e2a3b; }
+    [data-theme="light"] .item-name-input::placeholder { color: #a8b3c1; }
+    [data-theme="light"] .delete-btn { color: #a8b3c1; }
+    [data-theme="light"] .delete-btn:hover { color: #b91c1c; }
+    [data-theme="light"] .field-label { color: #8896a9; }
+    [data-theme="light"] .field-input { background: #f8fafd; border: 1px solid #dde4ed; color: #1e2a3b; }
+    [data-theme="light"] .field-input:focus { border-color: #2563eb; }
+    [data-theme="light"] .field-input::placeholder { color: #a8b3c1; }
 
-    /* 字段输入 */
-    [data-theme="light"] .field-label { color: #8c959f; }
-    [data-theme="light"] .field-input {
-      background: #f6f8fa;
-      border: 1px solid #d8dee4;
-      color: #1f2328;
-    }
-    [data-theme="light"] .field-input:focus { border-color: #0969da; }
-    [data-theme="light"] .field-input::placeholder { color: #8c959f; }
-
-    /* 箱型区 */
-    [data-theme="light"] .bin-section {
-      background: #f6f8fa;
-      border: 1px solid #d0d7de;
-    }
-    [data-theme="light"] .bin-mode-toggle {
-      background: #ffffff;
-      border: 1px solid #d8dee4;
-    }
-    [data-theme="light"] .bin-mode-btn { color: #57606a; }
-    [data-theme="light"] .bin-mode-btn.active { background: #0969da; color: #fff; }
+    /* 箱型设置 */
+    [data-theme="light"] .bin-section { background: #eef2f7; border: 1px solid #dde4ed; }
+    [data-theme="light"] .bin-mode-toggle { background: #f8fafd; border-color: #dde4ed; }
+    [data-theme="light"] .bin-mode-btn { color: #5d6a7e; background: transparent; }
+    [data-theme="light"] .bin-mode-btn.active { background: #2563eb; color: #fff; }
 
     /* 包材库搜索 */
-    [data-theme="light"] .catalog-search-input {
-      background: #f6f8fa;
-      border: 1px solid #d8dee4;
-      color: #24292f;
-    }
-    [data-theme="light"] .catalog-search-input:focus { border-color: #0969da; }
-    [data-theme="light"] .catalog-type-select {
-      background: #f6f8fa;
-      border: 1px solid #d8dee4;
-      color: #24292f;
-    }
-    [data-theme="light"] .catalog-search-results {
-      background: #ffffff;
-      border: 1px solid #d8dee4;
-    }
-    [data-theme="light"] .catalog-result-item { border-bottom: 1px solid #d0d7de; }
-    [data-theme="light"] .catalog-result-item:hover { background: #f6f8fa; }
-    [data-theme="light"] .catalog-result-name { color: #24292f; }
-    [data-theme="light"] .catalog-result-meta { color: #57606a; }
-    [data-theme="light"] .catalog-result-sku { color: #6e7781; }
-    [data-theme="light"] .catalog-chip {
-      background: #ddf4ff;
-      border: 1px solid #0969da;
-      color: #0969da;
-    }
-    [data-theme="light"] .catalog-chip-remove { color: #6e7781; }
-    [data-theme="light"] .catalog-chip-remove:hover { color: #cf222e; }
-    [data-theme="light"] .catalog-hint { color: #6e7781; }
+    [data-theme="light"] .catalog-search-input { background: #eef2f7; border-color: #dde4ed; color: #374151; }
+    [data-theme="light"] .catalog-search-input:focus { border-color: #2563eb; }
+    [data-theme="light"] .catalog-type-select { background: #eef2f7; border-color: #dde4ed; color: #374151; }
+    [data-theme="light"] .catalog-search-results { background: #f8fafd; border-color: #dde4ed; }
+    [data-theme="light"] .catalog-result-item { border-bottom-color: #e8edf5; }
+    [data-theme="light"] .catalog-result-item:hover { background: #eef2f7; }
+    [data-theme="light"] .catalog-result-name { color: #1e2a3b; }
+    [data-theme="light"] .catalog-result-meta { color: #8896a9; }
+    [data-theme="light"] .catalog-result-sku { color: #a8b3c1; }
+    [data-theme="light"] .catalog-chip { background: #dbeafe; border-color: #93c5fd; color: #1d4ed8; }
+    [data-theme="light"] .catalog-chip-remove { color: #93c5fd; }
+    [data-theme="light"] .catalog-chip-remove:hover { color: #b91c1c; }
+    [data-theme="light"] .catalog-hint { color: #a8b3c1; }
 
     /* 自定义箱型行 */
-    [data-theme="light"] .custom-bin-row {
-      background: #ffffff;
-      border: 1px solid #d0d7de;
-    }
-    [data-theme="light"] .custom-bin-name-input { color: #1f2328; }
-    [data-theme="light"] .custom-bin-name-input::placeholder { color: #8c959f; }
+    [data-theme="light"] .custom-bin-row { background: #f8fafd; border: 1px solid #dde4ed; }
+    [data-theme="light"] .custom-bin-name-input { color: #1e2a3b; }
+    [data-theme="light"] .custom-bin-name-input::placeholder { color: #a8b3c1; }
 
     /* 按钮 */
-    [data-theme="light"] .add-btn {
-      border: 1px dashed #d8dee4;
-      color: #57606a;
-    }
-    [data-theme="light"] .add-btn:hover { border-color: #0969da; color: #0969da; }
-    [data-theme="light"] .import-btn {
-      border: 1px dashed #d8dee4;
-      color: #57606a;
-    }
-    [data-theme="light"] .import-btn:hover { border-color: #1a7f37; color: #1a7f37; }
-    [data-theme="light"] .tpl-link { color: #0969da; }
-    [data-theme="light"] .tpl-link:hover { color: #0550ae; }
+    [data-theme="light"] .add-btn { border-color: #dde4ed; color: #8896a9; background: transparent; }
+    [data-theme="light"] .add-btn:hover { border-color: #2563eb; color: #2563eb; }
+    [data-theme="light"] .import-btn { border-color: #dde4ed; color: #8896a9; background: transparent; }
+    [data-theme="light"] .import-btn:hover { border-color: #15803d; color: #15803d; }
+    [data-theme="light"] .tpl-link { color: #2563eb; }
+    [data-theme="light"] .tpl-link:hover { color: #1d4ed8; }
+    [data-theme="light"] #input-footer { border-top: 1px solid #dde4ed; background: #f8fafd; }
+    [data-theme="light"] .demo-btn { border-color: #dde4ed; color: #5d6a7e; background: transparent; }
+    [data-theme="light"] .demo-btn:hover { border-color: #2563eb; color: #2563eb; }
+    [data-theme="light"] .calc-btn { background: #2563eb; }
+    [data-theme="light"] .calc-btn:hover { background: #1d4ed8; }
+    [data-theme="light"] .calc-btn:disabled { background: #e8edf5; color: #a8b3c1; }
 
-    /* 底部操作栏 */
-    [data-theme="light"] #input-footer { border-top: 1px solid #d0d7de; }
-    [data-theme="light"] .demo-btn {
-      border: 1px solid #d8dee4;
-      color: #57606a;
-    }
-    [data-theme="light"] .demo-btn:hover { border-color: #0969da; color: #0969da; }
-    [data-theme="light"] .calc-btn { background: #0969da; }
-    [data-theme="light"] .calc-btn:hover { background: #0550ae; }
-    [data-theme="light"] .calc-btn:disabled { background: #d0d7de; color: #8c959f; }
+    /* ── 右侧画布区 ── */
+    [data-theme="light"] #canvas-wrap { background: #dde4ed; }
+    [data-theme="light"] #empty-state { color: #8896a9; }
+    [data-theme="light"] #loading-mask { background: rgba(238,242,247,0.9); }
+    [data-theme="light"] .spinner { border-color: #dde4ed; border-top-color: #2563eb; }
+    [data-theme="light"] #loading-mask p { color: #5d6a7e; }
+    [data-theme="light"] #error-bar { background: #fef2f2; border-color: #b91c1c; color: #b91c1c; }
+    [data-theme="light"] .vtab { border-color: #dde4ed; background: rgba(248,250,253,0.92); color: #5d6a7e; }
+    [data-theme="light"] .vtab.active { background: #2563eb; color: #fff; border-color: #2563eb; }
 
-    /* 右侧可视化 */
-    [data-theme="light"] #canvas-wrap { background: #f6f8fa; }
-    [data-theme="light"] #empty-state { color: #8c959f; }
+    /* ── 动画控制栏 ── */
+    [data-theme="light"] #anim-bar { background: #f8fafd; border-top: 1px solid #dde4ed; }
+    [data-theme="light"] .anim-btn { border: 1px solid #dde4ed; background: #eef2f7; color: #5d6a7e; }
+    [data-theme="light"] .anim-btn:hover { background: #dde4ed; color: #1e2a3b; }
+    [data-theme="light"] .anim-btn:disabled { color: #a8b3c1; background: #f1f5f9; border-color: #e8edf5; }
+    [data-theme="light"] #progress-label { color: #8896a9; }
+    [data-theme="light"] #progress-track { background: #e8edf5; }
+    [data-theme="light"] #progress-fill { background: #2563eb; }
+    [data-theme="light"] .speed-wrap { color: #8896a9; }
+    [data-theme="light"] #speed-slider { accent-color: #2563eb; }
 
-    /* 加载遮罩 */
-    [data-theme="light"] #loading-mask { background: rgba(246,248,250,0.9); }
-    [data-theme="light"] .spinner {
-      border: 3px solid #d0d7de;
-      border-top-color: #0969da;
-    }
+    /* ── AI 开关区 ── */
+    [data-theme="light"] .ai-toggle-label { color: #1e2a3b; }
+    [data-theme="light"] .ai-toggle-sub { color: #8896a9; }
+    [data-theme="light"] .toggle-slider { background: #c8d3e0; }
+    [data-theme="light"] .toggle-switch input:checked + .toggle-slider { background: #2563eb; }
+    [data-theme="light"] #ai-model-selector { background: #eef2f7; border: 1px solid #dde4ed; border-radius: 8px; }
+    [data-theme="light"] .ai-model-label { color: #8896a9; }
+    [data-theme="light"] .ai-model-btn { background: transparent; border-color: transparent; color: #5d6a7e; }
+    [data-theme="light"] .ai-model-btn:hover { background: #e8edf5; }
+    [data-theme="light"] .ai-model-btn.active { background: #f8fafd; border-color: #2563eb; }
+    [data-theme="light"] .ai-model-btn .model-name { color: #374151; }
+    [data-theme="light"] .ai-model-btn.active .model-name { color: #2563eb; }
+    [data-theme="light"] .ai-model-btn .model-desc { color: #a8b3c1; }
+    [data-theme="light"] .ai-model-btn.active .model-desc { color: #5d6a7e; }
+    [data-theme="light"] .ai-model-btn.ai-model-btn-disabled { opacity: 0.5; }
 
-    /* 错误提示 */
-    [data-theme="light"] #error-bar {
-      background: #ffebe9;
-      border: 1px solid #cf222e;
-      color: #cf222e;
-    }
+    /* AI 摘要 */
+    [data-theme="light"] #ai-summary { background: #f8fafd; border-top: 1px solid #dde4ed; color: #374151; }
+    [data-theme="light"] #ai-summary::-webkit-scrollbar-thumb { background: #c8d3e0; }
+    [data-theme="light"] #ai-summary strong { color: #1e2a3b; }
+    [data-theme="light"] #ai-summary.local { background: #f8fafd; }
+    [data-theme="light"] #ai-summary-badge { background: #dbeafe; color: #1d4ed8; }
+    [data-theme="light"] #ai-summary.show.local #ai-summary-badge { background: #e8edf5; color: #5d6a7e; }
 
-    /* 箱子 Tab */
-    [data-theme="light"] .vtab {
-      border: 1px solid #d8dee4;
-      background: rgba(246,248,250,0.9);
-      color: #57606a;
-    }
-    [data-theme="light"] .vtab.active { background: #0969da; border-color: #0969da; }
-    [data-theme="light"] #bin-tabs-bar {}
-
-    /* 动画控制栏 */
-    [data-theme="light"] #anim-bar {
-      background: #ffffff;
-      border-top: 1px solid #d0d7de;
-    }
-    [data-theme="light"] .anim-btn {
-      border: 1px solid #d8dee4;
-      color: #1f2328;
-    }
-    [data-theme="light"] .anim-btn:hover { border-color: #0969da; color: #0969da; }
-    [data-theme="light"] #progress-label { color: #57606a; }
-    [data-theme="light"] #progress-track { background: #d0d7de; }
-    [data-theme="light"] #progress-fill { background: linear-gradient(90deg, #0969da, #0550ae); }
-    [data-theme="light"] .speed-wrap { color: #57606a; }
-    [data-theme="light"] #speed-slider { accent-color: #0969da; }
-
-    /* AI 区域 */
-    [data-theme="light"] .ai-toggle-wrap {
-      background: #f6f8fa;
-      border: 1px solid #d0d7de;
-    }
-    [data-theme="light"] .ai-toggle-sub { color: #8c959f; }
-    [data-theme="light"] .toggle-slider { background: #d8dee4; }
-    [data-theme="light"] .toggle-switch input:checked + .toggle-slider { background: #0969da; }
-    [data-theme="light"] #ai-model-selector {
-      background: #f6f8fa;
-      border: 1px solid #d0d7de;
-    }
-    [data-theme="light"] .ai-model-label { color: #57606a; }
-    [data-theme="light"] .ai-model-btn {
-      border: 1px solid #d8dee4;
-      background: #ffffff;
-      color: #24292f;
-    }
-    [data-theme="light"] .ai-model-btn.active {
-      border-color: #0969da;
-      background: #ddf4ff;
-      color: #0969da;
-    }
-    [data-theme="light"] .ai-model-btn .model-desc { color: #57606a; }
-    [data-theme="light"] .ai-model-btn.active .model-desc { color: #0550ae; }
-    [data-theme="light"] .ai-model-btn.ai-model-btn-disabled .model-desc { color: #6e7781; }
-    [data-theme="light"] #ai-summary {
-      background: rgba(255,255,255,0.97);
-      border: 1px solid #0969da;
-      color: #57606a;
-    }
-    [data-theme="light"] #ai-summary::-webkit-scrollbar-thumb { background: #d8dee4; }
-    [data-theme="light"] #ai-summary strong { color: #0969da; }
-    [data-theme="light"] #ai-summary.local { border-color: #953800; }
-    [data-theme="light"] #ai-summary.local strong { color: #953800; }
-    [data-theme="light"] #ai-summary.show.ai   #ai-summary-badge { background: rgba(9,105,218,0.12); color: #0969da; }
-    [data-theme="light"] #ai-summary.show.local #ai-summary-badge { background: rgba(149,56,0,0.1); color: #953800; }
-
-    /* 对比面板 */
-    [data-theme="light"] #compare-panel {
-      background: rgba(255,255,255,0.97);
-      border: 1px solid #953800;
-    }
-    [data-theme="light"] #compare-panel::-webkit-scrollbar-thumb { background: #d8dee4; }
-    [data-theme="light"] .compare-title { color: #953800; }
-    [data-theme="light"] .compare-col {
-      background: #f6f8fa;
-    }
-    [data-theme="light"] .compare-col-title { color: #57606a; }
-    [data-theme="light"] .compare-col-val { color: #1f2328; }
-    [data-theme="light"] .compare-col-sub { color: #57606a; }
-    [data-theme="light"] .winner-badge { background: #0969da; }
-    [data-theme="light"] .fee-tier-badge {
-      background: rgba(149,56,0,0.1);
-      color: #953800;
-      border: 1px solid rgba(149,56,0,0.3);
-    }
-    [data-theme="light"] .compare-divider { color: #8c959f; }
-    [data-theme="light"] .compare-view-btn {
-      border: 1px solid #d8dee4;
-      color: #57606a;
-    }
-    [data-theme="light"] .compare-view-btn:hover { border-color: #0969da; color: #0969da; }
-    [data-theme="light"] .compare-view-btn.active { background: #0969da; border-color: #0969da; }
-    [data-theme="light"] .rec-tab {
-      border: 1px solid #d8dee4;
-      color: #57606a;
-    }
-    [data-theme="light"] .rec-tab:hover { border-color: #0969da; color: #0969da; }
-    [data-theme="light"] .rec-tab.active { background: #ddf4ff; border-color: #0969da; color: #0969da; }
-
-    /* 选定/推荐方案按钮 */
-    [data-theme="light"] .compare-select-btn {
-      border: 1px solid #d0d7de;
-      background: #ffffff;
-      color: #57606a;
-    }
-    [data-theme="light"] .compare-select-btn:hover { border-color: #0969da; color: #0969da; background: #f0f6ff; }
-    [data-theme="light"] .compare-select-btn.recommend {
-      border-color: #0969da; background: #ddf4ff; color: #0969da;
-    }
-    [data-theme="light"] .compare-select-btn.recommend:hover { background: #0969da; color: #fff; border-color: #0550ae; }
-    [data-theme="light"] .compare-col.recommend { border: 1px solid rgba(9,105,218,0.45); }
-    [data-theme="light"] .recommend-tag {
-      background: rgba(9,105,218,0.12);
-      color: #0969da;
-      border: 1px solid rgba(9,105,218,0.3);
-    }
-    [data-theme="light"] .compare-select-btn.selected {
-      border-color: #1a7f37; background: #d4f7dc; color: #1a7f37;
-    }
-    [data-theme="light"] .compare-col.selected { border: 1px solid #1a7f37; background: #f0fff4; }
-    [data-theme="light"] .compare-select-btn.auto-selected { border-color: #953800; background: rgba(149,56,0,0.08); color: #953800; }
-    [data-theme="light"] .compare-col.auto-selected { border: 1px solid rgba(149,56,0,0.4); background: rgba(149,56,0,0.03); }
+    /* ── 对比面板 ── */
+    [data-theme="light"] #compare-panel { background: #f8fafd; border-left: 1px solid #dde4ed; }
+    [data-theme="light"] #compare-panel::-webkit-scrollbar-thumb { background: #c8d3e0; }
+    [data-theme="light"] .compare-title { color: #8896a9; border-bottom: 1px solid #e8edf5; }
+    [data-theme="light"] .compare-row { border-bottom: 1px solid #e8edf5; }
+    [data-theme="light"] .compare-col { background: #f8fafd; }
+    [data-theme="light"] .compare-col + .compare-col { border-left: 1px solid #e8edf5; }
+    [data-theme="light"] .compare-col-title { color: #8896a9; }
+    [data-theme="light"] .compare-col-val { color: #1e2a3b; }
+    [data-theme="light"] .compare-col-sub { color: #8896a9; }
+    [data-theme="light"] .winner-badge { background: #dbeafe; color: #1d4ed8; }
+    [data-theme="light"] .fee-block { color: #374151; }
+    [data-theme="light"] .fee-tier-badge { background: #eef2f7; color: #5d6a7e; }
+    [data-theme="light"] .compare-divider { border-color: #e8edf5; }
+    [data-theme="light"] .compare-actions { border-top: 1px solid #e8edf5; }
+    [data-theme="light"] .compare-view-btn { border-color: #dde4ed; color: #5d6a7e; background: #eef2f7; }
+    [data-theme="light"] .compare-view-btn:hover { background: #e8edf5; color: #1e2a3b; }
+    [data-theme="light"] .compare-view-btn.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+    [data-theme="light"] .rec-tabs { border-bottom: 1px solid #e8edf5; }
+    [data-theme="light"] .rec-tab { color: #8896a9; }
+    [data-theme="light"] .rec-tab:hover { color: #374151; }
+    [data-theme="light"] .rec-tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+    [data-theme="light"] .compare-select-btn { background: #eef2f7; border-color: #dde4ed; color: #374151; }
+    [data-theme="light"] .compare-select-btn:hover { background: #e8edf5; }
+    [data-theme="light"] .compare-select-btn.recommend { background: #2563eb; border-color: #2563eb; color: #fff; }
+    [data-theme="light"] .compare-select-btn.recommend:hover { background: #1d4ed8; }
+    [data-theme="light"] .compare-col.recommend { background: #eff6ff; }
+    [data-theme="light"] .recommend-tag { background: #dbeafe; color: #1d4ed8; }
+    [data-theme="light"] .compare-select-btn.selected,
+    [data-theme="light"] .compare-select-btn.auto-selected { background: #15803d; border-color: #15803d; color: #fff; }
+    [data-theme="light"] .compare-col.selected,
+    [data-theme="light"] .compare-col.auto-selected { background: #f0fdf4; }
+    [data-theme="light"] #compare-conclusion { background: #f8fafd; border-top: 1px solid #dde4ed; color: #374151; }
+    [data-theme="light"] #conclusion-blur.show { backdrop-filter: blur(4px); background: rgba(248,250,253,0.7); }
 
     /* 反馈区 */
-    [data-theme="light"] .feedback-section {
-      border: 1px solid rgba(26,127,55,0.35);
-      background: rgba(26,127,55,0.04);
-    }
-    [data-theme="light"] .feedback-label { color: #1a7f37; }
-    [data-theme="light"] .feedback-btn-adopt {
-      border: 1px solid #1a7f37;
-      background: #d4f7dc;
-      color: #1a7f37;
-    }
-    [data-theme="light"] .feedback-btn-adopt:hover { background: #c0f0cb; }
-    [data-theme="light"] .feedback-btn-other {
-      border: 1px solid #d8dee4;
-      color: #57606a;
-    }
-    [data-theme="light"] .feedback-btn-other:hover { border-color: #0969da; color: #0969da; }
-    [data-theme="light"] .feedback-input {
-      background: #f6f8fa;
-      border: 1px solid #d8dee4;
-      color: #1f2328;
-    }
-    [data-theme="light"] .feedback-input:focus { border-color: #0969da; }
-    [data-theme="light"] .feedback-input.error { border-color: #cf222e; }
-    [data-theme="light"] .feedback-submit {
-      border: 1px solid #0969da;
-      background: #ddf4ff;
-      color: #0969da;
-    }
-    [data-theme="light"] .feedback-submit:hover { background: #0969da; border-color: #0969da; color: white; }
-
-    /* 包材目录弹窗 */
-    [data-theme="light"] #catalog-box {
-      background: #ffffff;
-      border: 1px solid #d8dee4;
-    }
-    [data-theme="light"] #catalog-header span { color: #1f2328; }
-    [data-theme="light"] #catalog-close { color: #57606a; }
-    [data-theme="light"] #catalog-close:hover { color: #cf222e; }
-    [data-theme="light"] #catalog-search {
-      background: #f6f8fa;
-      border: 1px solid #d8dee4;
-      color: #1f2328;
-    }
-    [data-theme="light"] #catalog-search:focus { border-color: #0969da; }
-    [data-theme="light"] #catalog-type-select {
-      background: #f6f8fa;
-      border: 1px solid #d8dee4;
-      color: #57606a;
-    }
-    [data-theme="light"] #catalog-list {
-      border: 1px solid #d0d7de;
-    }
-    [data-theme="light"] #catalog-list::-webkit-scrollbar-thumb { background: #d8dee4; }
-    [data-theme="light"] .catalog-item { border-bottom: 1px solid #d0d7de; }
-    [data-theme="light"] .catalog-item:hover { background: #f6f8fa; }
-    [data-theme="light"] .catalog-item-name { color: #1f2328; }
-    [data-theme="light"] .catalog-item-dims { color: #57606a; }
-    [data-theme="light"] .catalog-item-price { color: #953800; }
-    [data-theme="light"] #catalog-footer { color: #8c959f; }
-    [data-theme="light"] .catalog-page-btn {
-      background: #f6f8fa;
-      border: 1px solid #d8dee4;
-      color: #57606a;
-    }
-    [data-theme="light"] .catalog-page-btn:hover { border-color: #0969da; color: #0969da; }
-
-    /* 形状弹窗 */
-    [data-theme="light"] #shape-modal-box {
-      background: #ffffff;
-      border: 1px solid #d8dee4;
-    }
-    [data-theme="light"] #shape-modal-header span { color: #1f2328; }
-    [data-theme="light"] #shape-modal-close { color: #57606a; }
-    [data-theme="light"] #shape-modal-close:hover { color: #cf222e; }
-    [data-theme="light"] #shape-photo-preview { background: #f6f8fa; }
-    [data-theme="light"] #shape-canvas-wrap { background: #f6f8fa; }
-    [data-theme="light"] #shape-preview-loading {
-      background: rgba(246,248,250,0.9);
-      color: #57606a;
-    }
-    [data-theme="light"] #shape-note-text { color: #57606a; }
-    [data-theme="light"] #shape-confidence-row { color: #57606a; }
-    [data-theme="light"] #shape-confidence-track { background: #d0d7de; }
-    [data-theme="light"] #shape-confidence-fill { background: linear-gradient(90deg,#0969da,#0550ae); }
-    [data-theme="light"] #shape-confidence-text { color: #1f2328; }
-    [data-theme="light"] .shape-dim-label { color: #57606a; }
-    [data-theme="light"] .shape-dim-input {
-      background: #f6f8fa;
-      border: 1px solid #d8dee4;
-      color: #1f2328;
-    }
-    [data-theme="light"] .shape-dim-input:focus { border-color: #0969da; }
-    [data-theme="light"] #shape-dim-hint { color: #8c959f; }
-    [data-theme="light"] .shape-retake-btn {
-      border: 1px solid #d8dee4;
-      color: #57606a;
-    }
-    [data-theme="light"] .shape-retake-btn:hover { border-color: #0969da; color: #0969da; }
-    [data-theme="light"] .shape-confirm-btn { background: #0969da; }
-    [data-theme="light"] .shape-confirm-btn:hover { background: #0550ae; }
-    [data-theme="light"] #shape-capture-hint { color: #57606a; }
-    [data-theme="light"] .capture-slot {
-      background: #f6f8fa;
-      border: 2px dashed #d8dee4;
-    }
-    [data-theme="light"] .capture-slot:hover { border-color: #0969da; }
-    [data-theme="light"] .slot-label { color: #57606a; }
-    [data-theme="light"] .slot-hint { color: #8c959f; }
-    [data-theme="light"] .sp-thumb { background: #f6f8fa; border: 1px solid #d0d7de; }
-    [data-theme="light"] #sp-result-box { background: #f6f8fa; border: 1px solid #d0d7de; }
-    [data-theme="light"] .sp-result-title { color: #0969da; }
-    [data-theme="light"] .sp-field-label { color: #8c959f; }
-    [data-theme="light"] .sp-field-input {
-      background: #f6f8fa;
-      border: 1px solid #d8dee4;
-      color: #1f2328;
-    }
-    [data-theme="light"] .sp-field-input:focus { border-color: #0969da; }
-    [data-theme="light"] .sp-field-select {
-      background: #f6f8fa;
-      border: 1px solid #d8dee4;
-      color: #1f2328;
-    }
-    [data-theme="light"] .sp-frag-btn {
-      border: 1px solid #d8dee4;
-      color: #57606a;
-    }
-    [data-theme="light"] #sp-materials-box { background: #f6f8fa; border: 1px solid #d0d7de; }
-    [data-theme="light"] .sp-mat-item { border-bottom: 1px solid #d0d7de; }
-    [data-theme="light"] .sp-mat-name { color: #1f2328; }
-    [data-theme="light"] .sp-mat-desc { color: #8c959f; }
-    [data-theme="light"] .sp-mat-price { color: #953800; }
-    [data-theme="light"] .sp-mat-total { color: #1f2328; }
-    [data-theme="light"] #sp-profit-box { background: #f6f8fa; border: 1px solid #d0d7de; }
-    [data-theme="light"] .sp-profit-card { background: #ffffff; border: 1px solid #d0d7de; }
-    [data-theme="light"] .sp-profit-card-label { color: #8c959f; }
-    [data-theme="light"] .sp-profit-card-val { color: #0969da; }
-    [data-theme="light"] .sp-profit-card-unit { color: #8c959f; }
-    [data-theme="light"] .sp-score-bar { background: #d0d7de; }
-    [data-theme="light"] .sp-result-row { color: #57606a; }
-    [data-theme="light"] .sp-result-row strong { color: #1f2328; }
-    [data-theme="light"] .sp-provider-bar { background: #ffffff; border: 1px solid #d0d7de; }
-    [data-theme="light"] .sp-provider-label { color: #57606a; }
-    [data-theme="light"] .sp-provider-toggle { background: #f6f8fa; }
-    [data-theme="light"] .sp-pvd-btn { color: #57606a; }
-    [data-theme="light"] .sp-pvd-btn.active { background: #0969da; }
-    [data-theme="light"] .sp-pvd-btn:not(.active):hover { color: #1f2328; }
+    [data-theme="light"] .feedback-section { border-top: 1px solid #e8edf5; }
+    [data-theme="light"] .feedback-label { color: #8896a9; }
+    [data-theme="light"] .feedback-btn-adopt { background: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
+    [data-theme="light"] .feedback-btn-adopt:hover { background: #bfdbfe; }
+    [data-theme="light"] .feedback-btn-other { background: #eef2f7; color: #5d6a7e; border-color: #dde4ed; }
+    [data-theme="light"] .feedback-btn-other:hover { background: #e8edf5; }
+    [data-theme="light"] .feedback-changed { color: #5d6a7e; }
+    [data-theme="light"] .feedback-input { background: #eef2f7; border-color: #dde4ed; color: #1e2a3b; }
+    [data-theme="light"] .feedback-input:focus { border-color: #2563eb; }
+    [data-theme="light"] .feedback-input.error { border-color: #b91c1c; }
+    [data-theme="light"] .feedback-submit { background: #2563eb; color: #fff; }
+    [data-theme="light"] .feedback-submit:hover { background: #1d4ed8; }
+    [data-theme="light"] .feedback-done { color: #15803d; }
 
     /* 统计栏 */
-    [data-theme="light"] #stats-bar {
-      background: rgba(255,255,255,0.97);
-      border: 1px solid #d0d7de;
-    }
-    [data-theme="light"] .stat-line { color: #57606a; }
-    [data-theme="light"] .stat-line strong { color: #1f2328; }
-    [data-theme="light"] .stat-detail { border-top: 1px solid #d0d7de; }
-    [data-theme="light"] .stat-detail-title { color: #8c959f; }
-    [data-theme="light"] .stat-detail-row { color: #57606a; }
-    [data-theme="light"] .stat-detail-row strong { color: #1f2328; }
+    [data-theme="light"] #stats-bar { background: #f8fafd; border-top: 1px solid #dde4ed; }
+    [data-theme="light"] .stat-line { color: #374151; }
+    [data-theme="light"] .stat-line strong { color: #1e2a3b; }
+    [data-theme="light"] .stat-detail { background: #eef2f7; border: 1px solid #dde4ed; }
+    [data-theme="light"] .stat-detail-title { color: #8896a9; }
+    [data-theme="light"] .stat-detail-row { color: #374151; border-bottom-color: #e8edf5; }
+    [data-theme="light"] .stat-detail-row strong { color: #1e2a3b; }
 
-    /* 悬停提示框 */
-    [data-theme="light"] #item-tooltip {
-      background: rgba(255,255,255,0.98);
-      border: 1px solid #d8dee4;
-      color: #1f2328;
-    }
-    [data-theme="light"] #item-tooltip .tip-name { color: #0969da; }
-    [data-theme="light"] #item-tooltip .tip-row { color: #57606a; }
-    [data-theme="light"] #item-tooltip .tip-row strong { color: #1f2328; }
+    /* Tooltip */
+    [data-theme="light"] #item-tooltip { background: #f8fafd; border: 1px solid #dde4ed; color: #374151; box-shadow: 0 4px 12px rgba(30,42,59,0.12); }
+    [data-theme="light"] #item-tooltip .tip-name { color: #1e2a3b; }
+    [data-theme="light"] #item-tooltip .tip-row { color: #5d6a7e; }
+    [data-theme="light"] #item-tooltip .tip-row strong { color: #1e2a3b; }
+    [data-theme="light"] .camera-btn { background: rgba(248,250,253,0.9); border-color: #dde4ed; color: #5d6a7e; }
+    [data-theme="light"] .camera-btn:hover { background: #eef2f7; color: #1e2a3b; }
 
-    /* 弹窗类 */
-    [data-theme="light"] .classify-modal {
-      background: #ffffff;
-      border: 1px solid #d8dee4;
-    }
-    [data-theme="light"] .classify-modal-title { color: #1f2328; }
-    [data-theme="light"] .classify-chip-toggle {
-      border: 1px solid rgba(9,105,218,0.35);
-      background: rgba(9,105,218,0.1);
-      color: #0969da;
-    }
-    [data-theme="light"] .classify-chip-toggle:not(.active) { background: transparent; }
-    [data-theme="light"] .classify-modal-footer {}
-    [data-theme="light"] .classify-skip-btn {
-      border: 1px solid #d8dee4;
-      color: #57606a;
-    }
-    [data-theme="light"] .classify-skip-btn:hover { color: #1f2328; border-color: #57606a; }
-    [data-theme="light"] .classify-confirm-btn { background: #0969da; }
-    [data-theme="light"] .classify-confirm-btn:hover { background: #0550ae; }
-    [data-theme="light"] .classify-banner {
-      background: rgba(9,105,218,0.06);
-      border: 1px solid rgba(9,105,218,0.2);
-    }
-    [data-theme="light"] .classify-reason { color: #57606a; }
+    /* ── 包材目录弹窗 ── */
+    [data-theme="light"] #catalog-modal { background: rgba(238,242,247,0.6); }
+    [data-theme="light"] #catalog-box { background: #f8fafd; border: 1px solid #dde4ed; box-shadow: 0 8px 32px rgba(30,42,59,0.15); }
+    [data-theme="light"] #catalog-header { border-bottom: 1px solid #e8edf5; }
+    [data-theme="light"] #catalog-header span { color: #1e2a3b; }
+    [data-theme="light"] #catalog-close { color: #8896a9; }
+    [data-theme="light"] #catalog-close:hover { color: #1e2a3b; }
+    [data-theme="light"] #catalog-search { background: #eef2f7; border-color: #dde4ed; color: #374151; }
+    [data-theme="light"] #catalog-search:focus { border-color: #2563eb; }
+    [data-theme="light"] #catalog-type-select { background: #eef2f7; border-color: #dde4ed; color: #374151; }
+    [data-theme="light"] #catalog-list::-webkit-scrollbar-thumb { background: #c8d3e0; }
+    [data-theme="light"] .catalog-item { border-bottom-color: #e8edf5; }
+    [data-theme="light"] .catalog-item:hover { background: #eef2f7; }
+    [data-theme="light"] .catalog-item-type.hard { background: #dbeafe; color: #1d4ed8; }
+    [data-theme="light"] .catalog-item-type.soft { background: #dcfce7; color: #15803d; }
+    [data-theme="light"] .catalog-item-name { color: #1e2a3b; }
+    [data-theme="light"] .catalog-item-dims { color: #8896a9; }
+    [data-theme="light"] .catalog-item-price { color: #5d6a7e; }
+    [data-theme="light"] #catalog-footer { border-top: 1px solid #e8edf5; background: #f8fafd; }
+    [data-theme="light"] .catalog-page-btn { background: #eef2f7; border-color: #dde4ed; color: #374151; }
+    [data-theme="light"] .catalog-page-btn:hover { background: #e8edf5; }
+    [data-theme="light"] .catalog-page-btn:disabled { color: #a8b3c1; background: #f1f5f9; }
 
-    /* 静默弹窗 */
-    [data-theme="light"] .silence-popup {
-      background: #ffffff;
-      border: 1px solid rgba(149,56,0,0.5);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    }
-    [data-theme="light"] .silence-popup-title { color: #1f2328; }
-    [data-theme="light"] .silence-popup-plan  { color: #953800; }
-    [data-theme="light"] .silence-reason-input {
-      background: #f6f8fa;
-      border: 1px solid #d8dee4;
-      color: #1f2328;
-    }
-    [data-theme="light"] .silence-reason-input:focus { border-color: #953800; }
-    [data-theme="light"] .silence-reason-cat {
-      background: #f6f8fa;
-      border: 1px solid #d8dee4;
-      color: #1f2328;
-    }
-    [data-theme="light"] .silence-reason-cat:focus { border-color: #953800; }
-    [data-theme="light"] .silence-reason-cat.error { border-color: #cf222e; }
-    [data-theme="light"] .silence-reason-input.error { border-color: #cf222e; }
-    [data-theme="light"] .silence-btn-cancel {
-      border: 1px solid #d8dee4;
-      color: #57606a;
-    }
-    [data-theme="light"] .silence-btn-cancel:hover { color: #1f2328; }
+    /* ── 分类弹窗 ── */
+    [data-theme="light"] .classify-modal-overlay { background: rgba(238,242,247,0.7); }
+    [data-theme="light"] .classify-modal { background: #f8fafd; border: 1px solid #dde4ed; box-shadow: 0 8px 32px rgba(30,42,59,0.15); }
+    [data-theme="light"] .classify-modal-title { color: #1e2a3b; border-bottom-color: #e8edf5; }
+    [data-theme="light"] .classify-chip-toggle { background: #eef2f7; border-color: #dde4ed; color: #374151; }
+    [data-theme="light"] .classify-modal-footer { border-top-color: #e8edf5; }
+    [data-theme="light"] .classify-skip-btn { background: #eef2f7; border-color: #dde4ed; color: #5d6a7e; }
+    [data-theme="light"] .classify-skip-btn:hover { background: #e8edf5; }
+    [data-theme="light"] .classify-confirm-btn { background: #2563eb; color: #fff; }
+    [data-theme="light"] .classify-confirm-btn:hover { background: #1d4ed8; }
+    [data-theme="light"] .classify-banner { background: #eef2f7; border-bottom: 1px solid #e8edf5; }
+    [data-theme="light"] .classify-banner-row { color: #374151; }
+    [data-theme="light"] .protect-badge.high { background: #fee2e2; color: #b91c1c; }
+    [data-theme="light"] .protect-badge.medium { background: #ffedd5; color: #c2410c; }
+    [data-theme="light"] .protect-badge.low { background: #dcfce7; color: #15803d; }
+    [data-theme="light"] .classify-type-tag { background: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
+    [data-theme="light"] .classify-reason { color: #8896a9; }
 
-    /* 方案切换弹窗 */
-    [data-theme="light"] .plan-switch-modal {
-      background: #ffffff;
-      border: 1px solid #d8dee4;
-    }
-    [data-theme="light"] .plan-switch-title { color: #1f2328; }
-    [data-theme="light"] .plan-switch-msg { color: #57606a; }
-    [data-theme="light"] .plan-switch-cancel {
-      border: 1px solid #d8dee4;
-      color: #57606a;
-    }
-    [data-theme="light"] .plan-switch-cancel:hover { color: #1f2328; }
+    /* ── 静默弹窗 ── */
+    [data-theme="light"] .silence-popup { background: #f8fafd; border: 1px solid #dde4ed; box-shadow: 0 4px 20px rgba(30,42,59,0.12); }
+    [data-theme="light"] .silence-popup-title { color: #1e2a3b; }
+    [data-theme="light"] .silence-popup-plan { color: #5d6a7e; }
+    [data-theme="light"] .silence-btn-yes { background: #2563eb; color: #fff; }
+    [data-theme="light"] .silence-btn-yes:hover { background: #1d4ed8; }
+    [data-theme="light"] .silence-btn-no { background: #eef2f7; border-color: #dde4ed; color: #374151; }
+    [data-theme="light"] .silence-reason-input,
+    [data-theme="light"] .silence-reason-cat { background: #eef2f7; border-color: #dde4ed; color: #1e2a3b; }
+    [data-theme="light"] .silence-reason-input:focus,
+    [data-theme="light"] .silence-reason-cat:focus { border-color: #2563eb; }
+    [data-theme="light"] .silence-reason-cat.error,
+    [data-theme="light"] .silence-reason-input.error { border-color: #b91c1c; }
+    [data-theme="light"] .silence-reason-error { color: #b91c1c; }
+    [data-theme="light"] .silence-btn-cancel { background: #eef2f7; border-color: #dde4ed; color: #5d6a7e; }
+    [data-theme="light"] .silence-btn-submit { background: #2563eb; color: #fff; }
+    [data-theme="light"] .silence-btn-submit:hover { background: #1d4ed8; }
+    [data-theme="light"] .silence-btn-submit:disabled { background: #dde4ed; color: #a8b3c1; }
 
-    /* 优化反馈弹窗 */
-    [data-theme="light"] .opt-feedback-modal {
-      background: #ffffff;
-      border: 1px solid #d8dee4;
-    }
-    [data-theme="light"] .opt-feedback-title { color: #1f2328; }
-    [data-theme="light"] .opt-feedback-label { color: #57606a; }
-    [data-theme="light"] .opt-feedback-select {
-      background: #f6f8fa;
-      border: 1px solid #d8dee4;
-      color: #1f2328;
-    }
-    [data-theme="light"] .opt-feedback-select:focus { border-color: #0969da; }
-    [data-theme="light"] .opt-feedback-textarea {
-      background: #f6f8fa;
-      border: 1px solid #d8dee4;
-      color: #1f2328;
-    }
-    [data-theme="light"] .opt-feedback-textarea:focus { border-color: #0969da; }
-    [data-theme="light"] .opt-feedback-textarea.error { border-color: #cf222e; }
-    [data-theme="light"] .opt-feedback-error { color: #cf222e; }
-    [data-theme="light"] .opt-fb-cancel {
-      border: 1px solid #d8dee4;
-      color: #57606a;
-    }
-    [data-theme="light"] .opt-fb-cancel:hover { color: #1f2328; }
-    [data-theme="light"] .opt-fb-submit { background: #0969da; }
-    [data-theme="light"] .opt-fb-submit:hover { background: #0550ae; }
-    [data-theme="light"] .opt-fb-done { color: #1a7f37; }
+    /* ── 切换方案/优化反馈 弹窗 ── */
+    [data-theme="light"] .plan-switch-overlay,
+    [data-theme="light"] .opt-feedback-overlay { background: rgba(238,242,247,0.7); }
+    [data-theme="light"] .plan-switch-modal,
+    [data-theme="light"] .opt-feedback-modal { background: #f8fafd; border: 1px solid #dde4ed; box-shadow: 0 8px 32px rgba(30,42,59,0.15); }
+    [data-theme="light"] .plan-switch-title,
+    [data-theme="light"] .opt-feedback-title { color: #1e2a3b; border-bottom-color: #e8edf5; }
+    [data-theme="light"] .plan-switch-msg { color: #5d6a7e; }
+    [data-theme="light"] .plan-switch-cancel,
+    [data-theme="light"] .opt-fb-cancel { background: #eef2f7; border-color: #dde4ed; color: #374151; }
+    [data-theme="light"] .plan-switch-cancel:hover,
+    [data-theme="light"] .opt-fb-cancel:hover { background: #e8edf5; }
+    [data-theme="light"] .plan-switch-confirm,
+    [data-theme="light"] .opt-fb-submit { background: #2563eb; color: #fff; }
+    [data-theme="light"] .plan-switch-confirm:hover,
+    [data-theme="light"] .opt-fb-submit:hover { background: #1d4ed8; }
+    [data-theme="light"] .opt-feedback-label { color: #5d6a7e; }
+    [data-theme="light"] .opt-feedback-select,
+    [data-theme="light"] .opt-feedback-textarea { background: #eef2f7; border-color: #dde4ed; color: #1e2a3b; }
+    [data-theme="light"] .opt-feedback-select:focus,
+    [data-theme="light"] .opt-feedback-textarea:focus { border-color: #2563eb; }
+    [data-theme="light"] .opt-feedback-textarea.error { border-color: #b91c1c; }
+    [data-theme="light"] .opt-feedback-error { color: #b91c1c; }
+    [data-theme="light"] .opt-fb-done { color: #15803d; }
+    [data-theme="light"] #opt-feedback-btn { background: #eef2f7; border: 1px solid #dde4ed; color: #5d6a7e; }
+    [data-theme="light"] #opt-feedback-btn:hover { background: #e8edf5; }
 
-    /* 公告弹窗 */
-    [data-theme="light"] .announce-modal {
-      background: #ffffff;
-      border: 1px solid #d8dee4;
-      box-shadow: 0 16px 48px rgba(0,0,0,0.15);
-    }
-    [data-theme="light"] .announce-header { border-bottom: 1px solid #d0d7de; }
-    [data-theme="light"] .announce-header h2 { color: #1f2328; }
-    [data-theme="light"] .announce-tag {
-      color: #1a7f37;
-      background: rgba(26,127,55,0.1);
-      border: 1px solid rgba(26,127,55,0.3);
-    }
-    [data-theme="light"] .announce-date { color: #8c959f; }
-    [data-theme="light"] .announce-body { color: #57606a; }
-    [data-theme="light"] .announce-body::-webkit-scrollbar-thumb { background: #d8dee4; }
-    [data-theme="light"] .announce-section-title { color: #0969da; }
-    [data-theme="light"] .announce-body li { color: #24292f; }
-    [data-theme="light"] .announce-footer { border-top: 1px solid #d0d7de; }
-    [data-theme="light"] .announce-history-link { color: #57606a; }
-    [data-theme="light"] .announce-history-link:hover { color: #0969da; }
+    /* 遮罩 */
+    [data-theme="light"] #canvas-blur-overlay { background: rgba(238,242,247,0.6); }
+    [data-theme="light"] .blur-lock-title { color: #1e2a3b; }
+    [data-theme="light"] .blur-lock-sub { color: #8896a9; }
 
-    /* 版本历程弹窗 */
-    [data-theme="light"] .changelog-modal {
-      background: #ffffff;
-      border: 1px solid #d8dee4;
-      box-shadow: 0 16px 48px rgba(0,0,0,0.15);
-    }
-    [data-theme="light"] .changelog-header { border-bottom: 1px solid #d0d7de; }
-    [data-theme="light"] .changelog-header h2 { color: #1f2328; }
-    [data-theme="light"] .changelog-close-x { color: #57606a; }
-    [data-theme="light"] .changelog-close-x:hover { color: #1f2328; }
-    [data-theme="light"] .changelog-body::-webkit-scrollbar-thumb { background: #d8dee4; }
-    [data-theme="light"] .cl-version-num { color: #1f2328; }
-    [data-theme="light"] .cl-tag-latest {
-      color: #1a7f37;
-      background: rgba(26,127,55,0.1);
-      border: 1px solid rgba(26,127,55,0.3);
-    }
-    [data-theme="light"] .cl-tag-server {
-      color: #0969da;
-      background: rgba(9,105,218,0.08);
-      border: 1px solid rgba(9,105,218,0.2);
-    }
-    [data-theme="light"] .cl-date { color: #8c959f; }
-    [data-theme="light"] .cl-section-name { color: #0969da; }
-    [data-theme="light"] .cl-section li { color: #24292f; }
-    [data-theme="light"] .cl-divider { border-top: 1px solid #d0d7de; }
+    /* ── 形状识别弹窗 ── */
+    [data-theme="light"] #shape-modal { background: rgba(238,242,247,0.6); }
+    [data-theme="light"] #shape-modal-box { background: #f8fafd; border: 1px solid #dde4ed; box-shadow: 0 8px 32px rgba(30,42,59,0.15); }
+    [data-theme="light"] #shape-modal-header { border-bottom-color: #e8edf5; }
+    [data-theme="light"] #shape-modal-header span { color: #1e2a3b; }
+    [data-theme="light"] #shape-modal-close { color: #8896a9; }
+    [data-theme="light"] #shape-modal-close:hover { color: #1e2a3b; }
+    [data-theme="light"] #shape-photo-preview { background: #eef2f7; border-color: #dde4ed; }
+    [data-theme="light"] #shape-canvas-wrap,
+    [data-theme="light"] #shape-type-row,
+    [data-theme="light"] #shape-dims-row { background: #eef2f7; }
+    [data-theme="light"] .shape-type-badge { background: #dbeafe; color: #1d4ed8; }
+    [data-theme="light"] #shape-note-text { color: #374151; }
+    [data-theme="light"] #shape-confidence-track { background: #e8edf5; }
+    [data-theme="light"] #shape-confidence-fill { background: #2563eb; }
+    [data-theme="light"] #shape-confidence-text { color: #5d6a7e; }
+    [data-theme="light"] .shape-dim-group { background: #f8fafd; border: 1px solid #dde4ed; border-radius: 6px; }
+    [data-theme="light"] .shape-dim-label { color: #8896a9; }
+    [data-theme="light"] .shape-dim-input { background: transparent; border-color: transparent; color: #1e2a3b; }
+    [data-theme="light"] .shape-dim-input:focus { border-color: #2563eb; background: #fff; }
+    [data-theme="light"] #shape-dim-hint { color: #8896a9; }
+    [data-theme="light"] #shape-modal-footer { border-top-color: #e8edf5; }
+    [data-theme="light"] .shape-retake-btn { background: #eef2f7; border-color: #dde4ed; color: #374151; }
+    [data-theme="light"] .shape-retake-btn:hover { background: #e8edf5; }
+    [data-theme="light"] .shape-confirm-btn { background: #2563eb; color: #fff; }
+    [data-theme="light"] .shape-confirm-btn:hover { background: #1d4ed8; }
+    [data-theme="light"] #shape-capture-hint { color: #5d6a7e; }
+    [data-theme="light"] .capture-slot { background: #eef2f7; border-color: #dde4ed; }
+    [data-theme="light"] .capture-slot:hover { border-color: #2563eb; }
+    [data-theme="light"] .capture-slot.captured { background: #f0fdf4; border-color: #86efac; }
+    [data-theme="light"] .slot-label { color: #8896a9; }
+    [data-theme="light"] .slot-hint { color: #a8b3c1; }
 
-    /* replay 区域 */
-    [data-theme="light"] #replay-bar { border-top: 1px solid #d0d7de; }
-    [data-theme="light"] #replay-calc-no {
-      background: #f6f8fa;
-      border: 1px solid #d8dee4;
-      color: #1f2328;
-    }
-    [data-theme="light"] #replay-calc-no::placeholder { color: #8c959f; }
-    [data-theme="light"] #replay-calc-no:focus { border-color: #0969da; }
-    [data-theme="light"] #replay-btn {
-      border: 1px solid #d8dee4;
-      color: #57606a;
-    }
-    [data-theme="light"] #replay-btn:hover { border-color: #0969da; color: #0969da; }
-    [data-theme="light"] #replay-banner {
-      background: #ffffff;
-      border-bottom: 1px solid #d0d7de;
-      color: #57606a;
-    }
+    /* ── 版本日志弹窗 ── */
+    [data-theme="light"] .vmodal-overlay { background: rgba(238,242,247,0.7); }
+    [data-theme="light"] .announce-modal,
+    [data-theme="light"] .changelog-modal { background: #f8fafd; border: 1px solid #dde4ed; box-shadow: 0 8px 32px rgba(30,42,59,0.15); }
+    [data-theme="light"] .announce-header,
+    [data-theme="light"] .changelog-header { border-bottom-color: #e8edf5; }
+    [data-theme="light"] .announce-header h2,
+    [data-theme="light"] .changelog-header h2 { color: #1e2a3b; }
+    [data-theme="light"] .announce-tag { background: #dbeafe; color: #1d4ed8; }
+    [data-theme="light"] .announce-date { color: #8896a9; }
+    [data-theme="light"] .announce-body,
+    [data-theme="light"] .changelog-body { color: #374151; }
+    [data-theme="light"] .announce-body::-webkit-scrollbar-thumb,
+    [data-theme="light"] .changelog-body::-webkit-scrollbar-thumb { background: #c8d3e0; }
+    [data-theme="light"] .announce-section-title { color: #1e2a3b; border-bottom-color: #e8edf5; }
+    [data-theme="light"] .announce-body li,
+    [data-theme="light"] .changelog-body li { color: #374151; }
+    [data-theme="light"] .announce-footer { border-top-color: #e8edf5; }
+    [data-theme="light"] .announce-history-link { color: #2563eb; }
+    [data-theme="light"] .announce-history-link:hover { color: #1d4ed8; }
+    [data-theme="light"] .announce-close-btn { background: #2563eb; color: #fff; }
+    [data-theme="light"] .announce-close-btn:hover { background: #1d4ed8; }
+    [data-theme="light"] .changelog-close-x { color: #8896a9; }
+    [data-theme="light"] .changelog-close-x:hover { color: #1e2a3b; }
+    [data-theme="light"] .cl-version-block { border-bottom-color: #e8edf5; }
+    [data-theme="light"] .cl-version-head { background: #eef2f7; }
+    [data-theme="light"] .cl-version-num { color: #1e2a3b; }
+    [data-theme="light"] .cl-tag-latest { background: #dbeafe; color: #1d4ed8; }
+    [data-theme="light"] .cl-tag-server { background: #dcfce7; color: #15803d; }
+    [data-theme="light"] .cl-date { color: #8896a9; }
+    [data-theme="light"] .cl-section { border-left-color: #dde4ed; }
+    [data-theme="light"] .cl-section-name { color: #5d6a7e; }
+    [data-theme="light"] .cl-section li { color: #374151; }
+    [data-theme="light"] .cl-divider { border-color: #e8edf5; }
 
-    /* 顶部 tab */
-    [data-theme="light"] #panel-tabs {
-      border-bottom: 1px solid #d0d7de;
-      background: #ffffff;
-    }
-    [data-theme="light"] .panel-tab { color: #57606a; }
-    [data-theme="light"] .panel-tab:hover { color: #1f2328; }
-    [data-theme="light"] .panel-tab.active { color: #0969da; border-bottom-color: #0969da; }
+    /* ── Panel Tab / Replay / 其他 ── */
+    [data-theme="light"] #panel-tabs { border-bottom-color: #e8edf5; background: #f8fafd; }
+    [data-theme="light"] .panel-tab { color: #8896a9; }
+    [data-theme="light"] .panel-tab:hover { color: #374151; }
+    [data-theme="light"] .panel-tab.active { color: #2563eb; border-bottom-color: #2563eb; }
+    [data-theme="light"] #replay-bar { background: #f8fafd; border-top: 1px solid #e8edf5; }
+    [data-theme="light"] #replay-calc-no { background: #eef2f7; border-color: #dde4ed; color: #374151; }
+    [data-theme="light"] #replay-calc-no::placeholder { color: #a8b3c1; }
+    [data-theme="light"] #replay-calc-no:focus { border-color: #2563eb; }
+    [data-theme="light"] #replay-btn { background: #2563eb; color: #fff; border-color: #2563eb; }
+    [data-theme="light"] #replay-btn:hover { background: #1d4ed8; }
+    [data-theme="light"] #replay-btn:disabled { background: #dde4ed; color: #a8b3c1; border-color: #dde4ed; }
+    [data-theme="light"] #replay-banner { background: #eff6ff; border-color: #93c5fd; color: #1d4ed8; }
+    [data-theme="light"] #sp-footer { border-top-color: #e8edf5; background: #f8fafd; }
+    [data-theme="light"] .draggable-panel { background: #f8fafd; border: 1px solid #dde4ed; box-shadow: 0 4px 16px rgba(30,42,59,0.10); }
+    [data-theme="light"] .draggable-panel .drag-grip { color: #8896a9; }
+    [data-theme="light"] .draggable-panel textarea { background: #eef2f7; border-color: #dde4ed; color: #1e2a3b; }
+    [data-theme="light"] .thumb-item { background: #eef2f7; border: 1px solid #dde4ed; }
+    [data-theme="light"] .thumb-item-label { color: #8896a9; }
+    [data-theme="light"] #shape-result-canvas-wrap { background: #eef2f7; }
 
-    /* draggable-panel */
-    [data-theme="light"] .draggable-panel .drag-grip { color: #57606a; }
-
-    /* 沉默超时模糊遮罩 */
-    [data-theme="light"] #canvas-blur-overlay { background: rgba(246,248,250,0.6); }
-    [data-theme="light"] .blur-lock-title { color: #1f2328; }
-    [data-theme="light"] .blur-lock-sub { color: #57606a; }
-    [data-theme="light"] #conclusion-blur { background: rgba(246,248,250,0.65); color: #57606a; }
-
-    /* sp-footer / sp-scroll */
-    [data-theme="light"] #sp-footer { border-top: 1px solid #d0d7de; }
-    [data-theme="light"] #sp-scroll::-webkit-scrollbar-thumb { background: #d8dee4; }
-    [data-theme="light"] .sp-upload-text { color: #57606a; }
-    [data-theme="light"] .sp-upload-sub  { color: #8c959f; }
-
-    /* thumb-item */
-    [data-theme="light"] .thumb-item { background: #f6f8fa; }
-    [data-theme="light"] #shape-result-canvas-wrap { background: #f6f8fa; }
   </style>
 </head>
 
