@@ -2763,7 +2763,8 @@
       const wrap = document.getElementById('canvas-wrap');
 
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x0d1117);
+      const _isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      scene.background = new THREE.Color(_isLight ? 0xdce4ef : 0x0d1117);
 
       camera = new THREE.PerspectiveCamera(45, wrap.clientWidth / wrap.clientHeight, 1, 5000);
 
@@ -5893,6 +5894,7 @@
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('ui-theme', next);
       _updateThemeBtn(next);
+      if (window.scene) scene.background = new THREE.Color(next === 'light' ? 0xdce4ef : 0x0d1117);
     }
     function _updateThemeBtn(theme) {
       const btn = document.getElementById('theme-toggle-btn');
