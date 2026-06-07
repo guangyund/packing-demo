@@ -5652,6 +5652,7 @@
           _sceneGrid.material[0].color.setHex(gc);
           _sceneGrid.material[1].color.setHex(gc);
         }
+        renderer && renderer.render(scene, camera);
       }
     }
     function _updateThemeBtn(theme) {
