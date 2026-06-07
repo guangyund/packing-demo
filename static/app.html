@@ -5643,7 +5643,7 @@
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('ui-theme', next);
       _updateThemeBtn(next);
-      if (window.scene) scene.background = new THREE.Color(next === 'light' ? 0xdce4ef : 0x0d1117);
+      if (scene) scene.background = new THREE.Color(next === 'light' ? 0xdce4ef : 0x0d1117);
     }
     function _updateThemeBtn(theme) {
       const btn = document.getElementById('theme-toggle-btn');
