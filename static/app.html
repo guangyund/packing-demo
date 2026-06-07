@@ -3112,6 +3112,18 @@
       }
       return group;
     }
+
+    // 暴露给全局：供普通脚本的 _toggleTheme 调用
+    window._updateSceneTheme = function(isLight) {
+      if (!scene) return;
+      scene.background = new THREE.Color(isLight ? 0xdce4ef : 0x0d1117);
+      if (_sceneGrid) {
+        const gc = isLight ? 0xc4cdd9 : 0x21262d;
+        _sceneGrid.material[0].color.setHex(gc);
+        _sceneGrid.material[1].color.setHex(gc);
+      }
+      renderer && renderer.render(scene, camera);
+    };
   </script>
 
   <script>
@@ -5645,15 +5657,7 @@
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('ui-theme', next);
       _updateThemeBtn(next);
-      if (scene) {
-        scene.background = new THREE.Color(next === 'light' ? 0xdce4ef : 0x0d1117);
-        if (_sceneGrid) {
-          const gc = next === 'light' ? 0xc4cdd9 : 0x21262d;
-          _sceneGrid.material[0].color.setHex(gc);
-          _sceneGrid.material[1].color.setHex(gc);
-        }
-        renderer && renderer.render(scene, camera);
-      }
+      window._updateSceneTheme && window._updateSceneTheme(next === 'light');
     }
     function _updateThemeBtn(theme) {
       const btn = document.getElementById('theme-toggle-btn');
