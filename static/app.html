@@ -1939,6 +1939,50 @@
     [data-theme="light"] .thumb-item-label { color: #8896a9; }
     [data-theme="light"] #shape-result-canvas-wrap { background: #eef2f7; }
 
+    /* ── AI 开关容器 ── */
+    [data-theme="light"] .ai-toggle-wrap { background: #f8fafd; border-top: 1px solid #dde4ed; }
+
+    /* ── 智能包装(sp-*)区域 ── */
+    [data-theme="light"] .sp-upload-area { background: #eef2f7; border-color: #dde4ed; color: #5d6a7e; }
+    [data-theme="light"] .sp-upload-area:hover { border-color: #2563eb; }
+    [data-theme="light"] .sp-upload-text { color: #374151; }
+    [data-theme="light"] .sp-upload-sub { color: #8896a9; }
+    [data-theme="light"] .sp-thumb { background: #eef2f7; border: 1px solid #dde4ed; }
+    [data-theme="light"] .sp-thumb-del { color: #8896a9; }
+    [data-theme="light"] #sp-result-box { background: #f8fafd; border: 1px solid #dde4ed; }
+    [data-theme="light"] .sp-result-title { color: #1e2a3b; border-bottom-color: #e8edf5; }
+    [data-theme="light"] .sp-field-label { color: #8896a9; }
+    [data-theme="light"] .sp-field-input { background: #eef2f7; border-color: #dde4ed; color: #1e2a3b; }
+    [data-theme="light"] .sp-field-input:focus { border-color: #2563eb; }
+    [data-theme="light"] .sp-field-select { background: #eef2f7; border-color: #dde4ed; color: #1e2a3b; }
+    [data-theme="light"] .sp-frag-btn { background: #eef2f7; border-color: #dde4ed; color: #5d6a7e; }
+    [data-theme="light"] .sp-frag-btn[data-level="high"].active { background: #fee2e2; border-color: #b91c1c; color: #b91c1c; }
+    [data-theme="light"] .sp-frag-btn[data-level="medium"].active { background: #ffedd5; border-color: #c2410c; color: #c2410c; }
+    [data-theme="light"] .sp-frag-btn[data-level="low"].active { background: #dcfce7; border-color: #15803d; color: #15803d; }
+    [data-theme="light"] #sp-materials-box { background: #f8fafd; border: 1px solid #dde4ed; }
+    [data-theme="light"] .sp-mat-item { border-bottom-color: #e8edf5; }
+    [data-theme="light"] .sp-mat-name { color: #1e2a3b; }
+    [data-theme="light"] .sp-mat-desc { color: #8896a9; }
+    [data-theme="light"] .sp-mat-price { color: #5d6a7e; }
+    [data-theme="light"] .sp-mat-total { color: #1e2a3b; }
+    [data-theme="light"] #sp-profit-box { background: #f8fafd; border: 1px solid #dde4ed; }
+    [data-theme="light"] .sp-profit-card { background: #eef2f7; border: 1px solid #dde4ed; }
+    [data-theme="light"] .sp-profit-card-label { color: #8896a9; }
+    [data-theme="light"] .sp-profit-card-val { color: #1e2a3b; }
+    [data-theme="light"] .sp-profit-card-unit { color: #8896a9; }
+    [data-theme="light"] .sp-score-bar { background: #e8edf5; }
+    [data-theme="light"] .sp-score-fill { background: #2563eb; }
+    [data-theme="light"] .sp-result-row { color: #374151; border-bottom-color: #e8edf5; }
+    [data-theme="light"] .sp-result-row strong { color: #1e2a3b; }
+    [data-theme="light"] .sp-provider-bar { background: #f8fafd; border: 1px solid #dde4ed; }
+    [data-theme="light"] .sp-provider-label { color: #8896a9; }
+    [data-theme="light"] .sp-provider-toggle { background: #eef2f7; border-color: #dde4ed; }
+    [data-theme="light"] .sp-pvd-btn { color: #5d6a7e; }
+    [data-theme="light"] .sp-pvd-btn.active { background: #2563eb; color: #fff; }
+    [data-theme="light"] .sp-pvd-btn:not(.active):hover { background: #e8edf5; }
+    [data-theme="light"] .sp-pvd-status { color: #5d6a7e; }
+    [data-theme="light"] .sp-pvd-warn { color: #c2410c; }
+
   </style>
 </head>
 
@@ -2568,8 +2612,9 @@
 
     // ── 绘制箱体框架和地面 ────────────────────────────────────────────────────
     function drawBinFrame(L, W, H) {
-      // 地面网格
-      const grid = new THREE.GridHelper(Math.max(L, W) * 2.5, 20, 0x21262d, 0x21262d);
+      // 地面网格（亮色主题下用浅色网格线）
+      const _gc = document.documentElement.getAttribute('data-theme') === 'light' ? 0xc4cdd9 : 0x21262d;
+      const grid = new THREE.GridHelper(Math.max(L, W) * 2.5, 20, _gc, _gc);
       grid.position.set(L / 2, -0.5, W / 2);
       scene.add(grid);
 
