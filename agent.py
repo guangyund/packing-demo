@@ -293,10 +293,12 @@ def _prefilter_catalog_bins(items: list, max_results: int = 150,
     """
     if not _RAW_CATALOG:
         return AVAILABLE_BINS
-    total_weight = sum(i.get("weight", 0) for i in items)
-    total_vol    = sum(i["length"] * i["width"] * i["height"] for i in items)
+    total_weight     = sum(i.get("weight", 0) for i in items)
+    total_vol        = sum(i["length"] * i["width"] * i["height"] for i in items)
+    max_item_vol     = max(i["length"] * i["width"] * i["height"] for i in items)
+    max_item_weight  = max(i.get("weight", 0) for i in items)
     item_sorted_dims = [sorted([i["length"], i["width"], i["height"]]) for i in items]
-    excluded_skus = excluded_skus or set()
+    excluded_skus    = excluded_skus or set()
 
     candidates = []
     for c in _RAW_CATALOG:
@@ -308,10 +310,12 @@ def _prefilter_catalog_bins(items: list, max_results: int = 150,
             continue
         if c.get("protection_rank", 1) < min_protection_rank:
             continue
-        if c.get("max_weight", 22) < total_weight:
+        # 承重：至少能装下最重的单件（多箱时不要求承受全部总重）
+        if c.get("max_weight", 22) < max_item_weight:
             continue
         bin_vol = c["length"] * c["width"] * c["height"]
-        if bin_vol < total_vol:
+        # 体积：至少能装下体积最大的单件（支持多箱，不再要求 >= 总体积）
+        if bin_vol < max_item_vol:
             continue
         if require_tight and bin_vol > total_vol * 3:
             continue

@@ -254,8 +254,8 @@ def _save_pack_result(result_id: str, agent_result: dict, input_bins: list | Non
         winner_sku  = ""
         if winner == "推荐新包材":
             rb = summary.get("recommended_bin") or {}
-            winner_bin = rb.get("type", "")
-            winner_sku = summary.get("best_existing_sku") or ""
+            winner_bin = rb.get("type", "推荐新包材")
+            winner_sku = ""  # 推荐新包材是定制尺寸，无SKU
             winner_fee = summary.get("recommended_fee") or {}
         elif winner == "软包材":
             sb = summary.get("soft_bin") or {}

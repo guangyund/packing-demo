@@ -531,7 +531,7 @@ def _make_bin_record(bin_data: dict, placed: list, weight_map: dict) -> dict:
             "width":  float(bin_data["width"]),
             "height": float(bin_data["height"]),
         },
-        "utilization":  round(item_volume / bin_volume, 2) if bin_volume > 0 else 0.0,
+        "utilization":  round(min(item_volume / bin_volume, 1.0), 2) if bin_volume > 0 else 0.0,
         "total_weight": round(total_weight, 2),
         "item_count":   len(placed),
         "items":        placed,
