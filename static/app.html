@@ -2486,6 +2486,7 @@
     // ── Three.js 变量 ─────────────────────────────────────────────────────────
     let scene, camera, renderer, controls;
     let sceneReady = false;
+    let _sceneGrid = null;  // 保存地面网格引用，主题切换时同步更新颜色
 
     // ── 动画状态 ──────────────────────────────────────────────────────────────
     let animItems    = [];   // [{mesh, targetY, startY, color, duration, startTime, state}]
@@ -2615,6 +2616,7 @@
       // 地面网格（亮色主题下用浅色网格线）
       const _gc = document.documentElement.getAttribute('data-theme') === 'light' ? 0xc4cdd9 : 0x21262d;
       const grid = new THREE.GridHelper(Math.max(L, W) * 2.5, 20, _gc, _gc);
+      _sceneGrid = grid;
       grid.position.set(L / 2, -0.5, W / 2);
       scene.add(grid);
 
@@ -5643,7 +5645,14 @@
       document.documentElement.setAttribute('data-theme', next);
       localStorage.setItem('ui-theme', next);
       _updateThemeBtn(next);
-      if (scene) scene.background = new THREE.Color(next === 'light' ? 0xdce4ef : 0x0d1117);
+      if (scene) {
+        scene.background = new THREE.Color(next === 'light' ? 0xdce4ef : 0x0d1117);
+        if (_sceneGrid) {
+          const gc = next === 'light' ? 0xc4cdd9 : 0x21262d;
+          _sceneGrid.material[0].color.setHex(gc);
+          _sceneGrid.material[1].color.setHex(gc);
+        }
+      }
     }
     function _updateThemeBtn(theme) {
       const btn = document.getElementById('theme-toggle-btn');
